@@ -1,0 +1,176 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- ENUMS ---
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Sport {
+  FUTBOL
+  TENIS
+  BASQUETBOL
+}
+
+enum Plan {
+  WEEKLY
+  MONTHLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  QVAPAY
+  TRANSFERMOVIL
+  CARD
+  USDT
+}
+
+enum TransactionStatus {
+  PENDING
+  PENDING_REVIEW
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum Currency {
+  USD
+  CUP
+  USDT
+}
+
+// --- MODELOS ---
+model Match {
+  id          String       @id @default(cuid())
+  league      String
+  homeTeam    String
+  awayTeam    String
+  matchDate   DateTime
+  sport       Sport        @default(FUTBOL)
+  predictions Prediction[]
+}
+
+model Prediction {
+  id          String  @id @default(cuid())
+  matchId     String
+  match       Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type        String
+  probability Int
+  isPremium   Boolean @default(false)
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String?        @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  birthDate     DateTime?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  twoFactorCode      String?
+  twoFactorExpiresAt DateTime?
+  hasVerifiedOtp     Boolean  @default(false)
+  
+  subscriptions Subscription[]
+  transactions  Transaction[]
+  accounts      Account[]
+  sessions      Session[]
+  notifications Notification[]
+  comments      Comment[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan
+  status    SubscriptionStatus @default(ACTIVE)
+  startsAt  DateTime           @default(now())
+  expiresAt DateTime
+  createdAt DateTime           @default(now())
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          Plan
+  amount        Decimal           @db.Decimal(10, 2)
+  currency      Currency
+  method        PaymentMethod
+  referenceNumber String?
+  status        TransactionStatus @default(PENDING)
+  reference     String?           @unique
+  receiptUrl    String?
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  paymentCodeHash String?
+  codeExpiresAt   DateTime?
+  usdtTxHash      String?   @unique
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String   @db.VarChar(200)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
