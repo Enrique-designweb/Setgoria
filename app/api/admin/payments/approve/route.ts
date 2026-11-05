@@ -1,7 +1,7 @@
-// app/api/admin/payments/approve/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { Plan } from "@/src/generated/prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -11,46 +11,84 @@ export async function POST(req: Request) {
     }
 
     const { transactionId } = await req.json();
-    if (!transactionId) return NextResponse.json({ message: "ID requerido" }, { status: 400 });
-
-    const transaction = await prisma.transaction.findUnique({
-      where: { id: transactionId },
-    });
-
-    if (!transaction || transaction.status !== "PENDING_REVIEW") {
-      return NextResponse.json({ message: "Transacción no válida" }, { status: 404 });
+    if (!transactionId) {
+      return NextResponse.json({ message: "ID requerido" }, { status: 400 });
     }
 
-    let daysToAdd = 7; 
-    if (transaction.plan === "MONTHLY") daysToAdd = 30;
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + daysToAdd);
-
-    // Transacción atómica de Prisma
-    await prisma.$transaction([
-      prisma.transaction.update({
-        where: { id: transactionId },
+    const result = await prisma.$transaction(async (tx) => {
+      // ✅ Idempotencia atómica: solo si sigue en PENDING_REVIEW
+      const updated = await tx.transaction.updateMany({
+        where: { id: transactionId, status: "PENDING_REVIEW" },
         data: { status: "COMPLETED" },
-      }),
-      prisma.subscription.create({
-        data: {
+      });
+
+      if (updated.count === 0) return { processed: false };
+
+      const transaction = await tx.transaction.findUnique({
+        where: { id: transactionId },
+      });
+      if (!transaction) return { processed: false };
+
+      const daysToAdd = transaction.plan === "MONTHLY" ? 30 : 7;
+
+      // ✅ Extender suscripción activa si existe
+      const existingSub = await tx.subscription.findFirst({
+        where: {
           userId: transaction.userId,
-          plan: transaction.plan, // Prisma acepta el string "WEEKLY" o "MONTHLY"
           status: "ACTIVE",
-          expiresAt: expiresAt,
+          expiresAt: { gt: new Date() },
         },
-      }),
-      prisma.notification.create({
+        orderBy: { expiresAt: "desc" },
+      });
+
+      const baseDate = existingSub?.expiresAt ?? new Date();
+      const expiresAt = new Date(baseDate);
+      expiresAt.setDate(expiresAt.getDate() + daysToAdd);
+
+      if (existingSub) {
+        await tx.subscription.update({
+          where: { id: existingSub.id },
+          data: { expiresAt, plan: transaction.plan as Plan },
+        });
+      } else {
+        await tx.subscription.create({
+          data: {
+            userId: transaction.userId,
+            plan: transaction.plan as Plan,
+            status: "ACTIVE",
+            expiresAt,
+          },
+        });
+      }
+
+      await tx.notification.create({
         data: {
           userId: transaction.userId,
-          message: `✅ ¡Tu pago ha sido aprobado! Tu plan ${transaction.plan} está activo hasta el ${expiresAt.toLocaleDateString('es-ES')}.`,
+          message: `✅ ¡Tu pago fue aprobado! Plan ${transaction.plan} activo hasta ${expiresAt.toLocaleDateString("es-ES", { dateStyle: "long" })}.`,
         },
-      }),
-    ]);
+      });
+
+      // ✅ Auditoría
+      await tx.adminLog.create({
+        data: {
+          adminId: session.user.id,
+          action: "APPROVE_PAYMENT",
+          targetId: transactionId,
+          metadata: { amount: Number(transaction.amount), plan: transaction.plan },
+        },
+      });
+
+      return { processed: true };
+    });
+
+    if (!result.processed) {
+      return NextResponse.json(
+        { message: "Transacción no válida o ya procesada" },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ message: "Pago aprobado" }, { status: 200 });
-
   } catch (error) {
     console.error("Error aprobando pago:", error);
     return NextResponse.json({ message: "Error del servidor" }, { status: 500 });

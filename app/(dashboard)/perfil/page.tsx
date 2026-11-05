@@ -61,7 +61,7 @@ export default function ProfilePage() {
       setFile(null); 
       router.refresh(); 
       setMessage({ type: "success", text: "¡Foto de perfil actualizada!" });
-    } catch { // 👈 CORREGIDO: Sin variable 'error'
+    } catch {
       setMessage({ type: "error", text: "Error al subir la foto." });
     } finally {
       setUploading(false);
@@ -162,10 +162,15 @@ export default function ProfilePage() {
         <div className="mt-8 pt-6 border-t border-gray-800">
           <h3 className="text-sm font-bold text-gray-400 uppercase mb-4">Más Opciones</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link href="/historial" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-colors">
-              <History className="w-5 h-5 text-orange-500" />
-              <span className="font-bold text-sm">Mi Historial de Pagos</span>
-            </Link>
+            
+            {/* 👈 CONDICIÓN: Solo mostrar historial si NO es ADMIN */}
+            {formData.role !== "ADMIN" && (
+              <Link href="/historial" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-colors">
+                <History className="w-5 h-5 text-orange-500" />
+                <span className="font-bold text-sm">Mi Historial de Pagos</span>
+              </Link>
+            )}
+            
             <Link href="/configuracion" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-colors">
               <Settings className="w-5 h-5 text-orange-500" />
               <span className="font-bold text-sm">Configuración de la App</span>

@@ -1,49 +1,53 @@
-// app/(dashboard)/futbol/page.tsx
 import { prisma } from "@/lib/prisma";
-import MatchCard from "@/components/ui/MatchCard";
-import { auth } from "@/auth";
-import { Trophy } from "lucide-react";
+import { getFootballMatches } from "@/lib/football-api";
+import LiveMatches from "@/components/ui/LiveMatches";
+import FutbolClient from "./FutbolClient";
+import type { OfflineMatch } from "@/lib/offline-db";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; 
 
 export default async function FutbolPage() {
-  const session = await auth();
-  
-  const matches = await prisma.match.findMany({
-    where: { sport: "FUTBOL" },
-    include: { predictions: true },
-    orderBy: { matchDate: 'asc' }
-  });
+  let matches: OfflineMatch[] = [];
 
-  let hasActiveSubscription = false;
-  if (session?.user?.id) {
-    const activeSub = await prisma.subscription.findFirst({
-      where: { userId: session.user.id, status: "ACTIVE", expiresAt: { gt: new Date() } }
-    });
-    if (activeSub) hasActiveSubscription = true;
+  try {
+    const apiMatches = await getFootballMatches();
+    if (apiMatches.length > 0) {
+      matches = apiMatches.map((m) => ({
+        id: m.id,
+        league: m.league,
+        homeTeam: m.homeTeam,
+        awayTeam: m.awayTeam,
+        matchDate: m.matchDate,
+        sport: "FUTBOL",
+        status: m.status,
+        predictions: [],
+      }));
+    }
+  } catch {
+    console.warn("API fútbol no disponible, usando BD");
   }
 
+  if (matches.length === 0) {
+    const dbMatches = await prisma.match.findMany({
+      where: { sport: "FUTBOL" },
+      include: { predictions: true },
+      orderBy: { matchDate: "asc" },
+      take: 50,
+    });
+    matches = dbMatches.map((m) => ({
+      ...m,
+      matchDate: m.matchDate.toISOString(),
+      status: "SCHEDULED" 
+    }));
+  }
+
+  const live = matches.filter((m) => m.status === "LIVE");
+
   return (
-    <div className="p-4 md:p-10 max-w-4xl mx-auto text-white">
-      <div className="flex items-center gap-3 mb-8">
-        <Trophy className="w-8 h-8 text-orange-500" />
-        <h1 className="text-2xl md:text-3xl font-black italic text-orange-500 uppercase">Partidos de Fútbol</h1>
-      </div>
-      
-      {matches.length === 0 ? (
-        <p className="text-gray-400">No hay partidos programados.</p>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {matches.map((match) => (
-            <MatchCard 
-              key={match.id} 
-              match={match} 
-              hasActiveSubscription={hasActiveSubscription} 
-              isAdmin={session?.user?.role === "ADMIN"} 
-            />
-          ))}
-        </div>
-      )}
+    <div className="p-4 md:p-6 pb-24">
+      <h1 className="text-2xl font-black italic text-orange-500 uppercase mb-4">Fútbol</h1>
+      {live.length > 0 && <LiveMatches matches={live} />}
+      <FutbolClient matches={matches} /> 
     </div>
   );
 }

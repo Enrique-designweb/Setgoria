@@ -1,37 +1,61 @@
-// app/(dashboard)/layout.tsx
-import Sidebar from "@/components/layout/Sidebar";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+// 👈 Si tus archivos usan "export default function Sidebar", NO uses llaves. 
+// Si usan "export function Sidebar", entonces pon llaves.
+// Asumiremos que son default exports (lo más común en Next.js).
+import Sidebar from "@/components/layout/Sidebar"; 
 import TopBar from "@/components/layout/TopBar";
 import BottomNav from "@/components/layout/BottomNav";
-import WelcomeModal from "@/components/ui/WelcomeModal";
+import SubscriptionGate from "@/components/ui/SubscriptionGate";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const activeSub = await prisma.subscription.findFirst({
+    where: {
+      userId: session.user.id,
+      status: "ACTIVE",
+      expiresAt: { gt: new Date() },
+    },
+  });
+
+  const hasActiveSubscription = !!activeSub;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { createdAt: true, role: true },
+  });
+
+  const isAdmin = user?.role === "ADMIN";
+  
+  // 👈 SOLUCIÓN AL ERROR DE PUREZA: Calculamos los tiempos afuera
+  const now = new Date().getTime(); 
+  const trialExpiresAt = user ? new Date(user.createdAt).getTime() + 72 * 60 * 60 * 1000 : 0;
+  const isTrialExpired = now > trialExpiresAt;
+
+  const shouldBlock = !isAdmin && isTrialExpired && !hasActiveSubscription;
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      
-      {/* 1. SIDEBAR (PC) */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-set-border bg-set-surface h-full z-50">
-        <Sidebar />
-      </aside>
-
-      {/* 2. CONTENEDOR PRINCIPAL */}
-      <div className="flex-1 flex flex-col h-full w-full relative">
+    <div className="flex min-h-screen bg-set-bg text-white">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-h-screen">
         <TopBar />
-        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
-          {children}
+        <main className="flex-1 overflow-x-hidden pb-20 md:pb-0">
+          <SubscriptionGate isExpired={shouldBlock}>
+            {children}
+          </SubscriptionGate>
         </main>
-      </div>
-
-      {/* 3. BOTTOM NAV (Móvil) */}
-      <div className="md:hidden fixed bottom-0 w-full z-50 bg-set-surface border-t border-set-border">
         <BottomNav />
       </div>
-
-      {/* 4. MODAL DE BIENVENIDA */}
-      <WelcomeModal />
     </div>
   );
 }

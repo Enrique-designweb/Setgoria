@@ -1,8 +1,7 @@
-// app/api/payments/qvapay-webhook/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { Plan } from "@/src/generated/prisma/client";
+import { Plan, Prisma } from "@/src/generated/prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -15,62 +14,100 @@ export async function POST(req: Request) {
     }
 
     const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-    if (signature.replace("sha256=", "") !== expected) {
+    const provided = signature.replace("sha256=", "");
+
+    if (
+      provided.length !== expected.length ||
+      !crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
+    ) {
       return NextResponse.json({ message: "Firma inválida" }, { status: 401 });
     }
 
-    const payload = JSON.parse(rawBody);
-    const { status, remote_id } = payload;
+    const payload = JSON.parse(rawBody) as {
+      status?: string;
+      remote_id?: string;
+      transaction_uuid?: string;
+    };
+    const { status, remote_id, transaction_uuid } = payload;
 
     if (status !== "paid" && status !== "COMPLETED") {
       return NextResponse.json({ received: true });
     }
 
-    const transaction = await prisma.transaction.findUnique({
-      where: { id: remote_id },
+    // ✅ Tipado correcto: Prisma.TransactionWhereInput
+    const orConditions: Prisma.TransactionWhereInput[] = [];
+    if (remote_id) orConditions.push({ id: remote_id }, { reference: remote_id });
+    if (transaction_uuid) orConditions.push({ reference: transaction_uuid });
+
+    if (orConditions.length === 0) {
+      return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
+    }
+
+    const transaction = await prisma.transaction.findFirst({
+      where: { OR: orConditions },
     });
 
     if (!transaction) {
+      console.warn("Webhook: transacción no encontrada", { remote_id, transaction_uuid });
       return NextResponse.json({ received: true });
     }
 
-    if (transaction.status === "COMPLETED") {
+    const result = await prisma.$transaction(async (tx) => {
+      const updated = await tx.transaction.updateMany({
+        where: { id: transaction.id, status: { not: "COMPLETED" } },
+        data: { status: "COMPLETED" },
+      });
+
+      if (updated.count === 0) return { processed: false };
+
+      const days = transaction.plan === "MONTHLY" ? 30 : 7;
+
+      const existingSub = await tx.subscription.findFirst({
+        where: {
+          userId: transaction.userId,
+          status: "ACTIVE",
+          expiresAt: { gt: new Date() },
+        },
+        orderBy: { expiresAt: "desc" },
+      });
+
+      const baseDate = existingSub?.expiresAt ?? new Date();
+      const expiresAt = new Date(baseDate);
+      expiresAt.setDate(expiresAt.getDate() + days);
+
+      if (existingSub) {
+        await tx.subscription.update({
+          where: { id: existingSub.id },
+          data: { expiresAt, plan: transaction.plan as Plan },
+        });
+      } else {
+        await tx.subscription.create({
+          data: {
+            userId: transaction.userId,
+            plan: transaction.plan as Plan,
+            status: "ACTIVE",
+            expiresAt,
+          },
+        });
+      }
+
+      await tx.notification.create({
+        data: {
+          userId: transaction.userId,
+          message: `🎉 ¡Pago confirmado! Suscripción ${transaction.plan} activa hasta ${expiresAt.toLocaleDateString("es-ES", { dateStyle: "long" })}.`,
+        },
+      });
+
+      return { processed: true };
+    });
+
+    if (!result.processed) {
       return NextResponse.json({ received: true, message: "Pago ya procesado" });
     }
 
-    let days = 7; 
-    if (transaction.plan === "MONTHLY") days = 30;
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
-
-    // Transacción atómica
-    await prisma.$transaction([
-      prisma.transaction.update({
-        where: { id: transaction.id },
-        data: { status: "COMPLETED" },
-      }),
-      prisma.subscription.create({
-        data: {
-          userId: transaction.userId,
-          plan: transaction.plan as Plan,
-          status: "ACTIVE",
-          expiresAt,
-        },
-      }),
-      // 👈 Notificación para el usuario
-      prisma.notification.create({
-        data: {
-          userId: transaction.userId,
-          message: `🎉 ¡Pago automático confirmado! Disfruta de tu suscripción ${transaction.plan} hasta el ${expiresAt.toLocaleDateString('es-ES')}.`,
-        },
-      }),
-    ]);
-
     return NextResponse.json({ received: true }, { status: 200 });
-
   } catch (error) {
-    console.error("Error en webhook:", error);
-    return NextResponse.json({ received: true }, { status: 200 });
+    console.error("Error crítico en webhook QvaPay:", error);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

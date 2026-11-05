@@ -1,12 +1,34 @@
 // components/ui/MatchCard.tsx
-import { Match, Prediction } from '../../src/generated/prisma/client';
 import { Lock, Crown } from 'lucide-react';
 import Link from 'next/link';
 
-type MatchWithPredictions = Match & { predictions: Prediction[] };
+// 👈 Tipo flexible que acepta tanto datos de Prisma como datos de la API/Offline
+export interface GenericMatch {
+  id: string;
+  league: string;
+  homeTeam: string;
+  awayTeam: string;
+  matchDate: string | Date;
+  sport: string; // Acepta "FUTBOL", "TENIS", etc., sin ser un enum estricto
+  predictions: {
+    id: string;
+    type: string;
+    probability: number;
+    isPremium: boolean;
+  }[];
+}
 
-export default function MatchCard({ match, hasActiveSubscription, isAdmin }: { match: MatchWithPredictions, hasActiveSubscription: boolean, isAdmin?: boolean }) {
-  const matchDate = new Date(match.matchDate).toLocaleTimeString('es-ES', {
+export default function MatchCard({ 
+  match, 
+  hasActiveSubscription, 
+  isAdmin 
+}: { 
+  match: GenericMatch; 
+  hasActiveSubscription: boolean; 
+  isAdmin?: boolean;
+}) {
+  const safeDate = typeof match.matchDate === "string" ? new Date(match.matchDate) : match.matchDate;
+  const matchDate = safeDate.toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -26,7 +48,6 @@ export default function MatchCard({ match, hasActiveSubscription, isAdmin }: { m
 
       <div className="flex flex-col gap-5">
         {match.predictions.map((pred) => {
-          // 👈 LÓGICA MAESTRA: Si es admin, NUNCA se bloquea
           const isLocked = pred.isPremium && !hasActiveSubscription && !isAdmin;
 
           return (

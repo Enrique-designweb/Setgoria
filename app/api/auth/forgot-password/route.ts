@@ -1,52 +1,74 @@
-// app/api/auth/forgot-password/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
-import { sendPasswordResetEmail } from "@/lib/email"; // 👈 Lo crearemos ahora
+import { sendPasswordResetEmail } from "@/lib/email";
+import { forgotPasswordSchema } from "@/lib/validations";
+import { authLimiter } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    // ✅ Rate limit por IP (evita spam de emails)
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const { success } = await authLimiter.limit(`forgot:${ip}`);
+    if (!success) {
+      return NextResponse.json(
+        { message: "Demasiados intentos. Espera unos minutos." },
+        { status: 429 }
+      );
+    }
 
-    if (!email) return NextResponse.json({ message: "El correo es obligatorio" }, { status: 400 });
+    const body = await req.json();
+    const validation = forgotPasswordSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { message: validation.error.issues[0].message },
+        { status: 400 }
+      );
+    }
 
+    const { email } = validation.data;
     const user = await prisma.user.findUnique({ where: { email } });
 
-    // Por seguridad, si el usuario no existe, no lo decimos (evita enumeración de correos)
-    if (!user) {
-      return NextResponse.json({ message: "Si el correo existe, recibirás un enlace." });
+    // ✅ Si es usuario de Google (sin password), no decimos nada para no enumerar
+    // Tampoco si no existe. Respuesta uniforme siempre.
+    const successMessage = { message: "Si el correo existe, recibirás un enlace." };
+
+    if (!user || !user.password) {
+      return NextResponse.json(successMessage);
     }
 
-    // 1. Generar un token seguro y aleatorio
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // Expira en 1 hora
+    // ✅ Token aleatorio, hasheado en BD
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
-    // 2. Limpiar tokens viejos de este usuario y guardar el nuevo
-    await prisma.verificationToken.deleteMany({ where: { identifier: email } });
-    await prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token: hashedToken,
-        expires: expiresAt,
-      },
-    });
+    // Limpiar tokens previos y guardar el nuevo
+    await prisma.$transaction([
+      prisma.verificationToken.deleteMany({ where: { identifier: email } }),
+      prisma.verificationToken.create({
+        data: { identifier: email, token: hashedToken, expires: expiresAt },
+      }),
+    ]);
 
-    // 3. Crear la URL de reseteo
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}&email=${email}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const resetUrl = `${baseUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
 
-    // 4. Log para pruebas locales
-    if (process.env.NODE_ENV === 'development') {
-      console.log('\n=========================================');
+    // Log de desarrollo
+    if (process.env.NODE_ENV === "development") {
+      console.log("\n=========================================");
       console.log(`🔗 ENLACE DE RECUPERACIÓN: ${resetUrl}`);
-      console.log('=========================================\n');
+      console.log("=========================================\n");
     }
 
-    // 5. Enviar correo
-    await sendPasswordResetEmail(email, resetUrl);
+    // Enviar email (no bloqueante en caso de error)
+    try {
+      await sendPasswordResetEmail(email, resetUrl);
+    } catch (emailError) {
+      console.error("Error enviando email de recuperación:", emailError);
+      // No fallamos la respuesta — el token existe aunque el email falle
+    }
 
-    return NextResponse.json({ message: "Si el correo existe, recibirás un enlace." });
-
+    return NextResponse.json(successMessage);
   } catch (error) {
     console.error("Error en forgot-password:", error);
     return NextResponse.json({ message: "Error del servidor" }, { status: 500 });

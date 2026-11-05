@@ -85,13 +85,27 @@ model User {
   twoFactorCode      String?
   twoFactorExpiresAt DateTime?
   hasVerifiedOtp     Boolean  @default(false)
-  
+  adminLogs AdminLog[] @relation("AdminLogs")
   subscriptions Subscription[]
   transactions  Transaction[]
   accounts      Account[]
   sessions      Session[]
   notifications Notification[]
   comments      Comment[]
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  admin     User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
+  action    String   // APPROVE_PAYMENT, DELETE_MATCH, CHANGE_ROLE, etc.
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([action])
 }
 
 model Account {
