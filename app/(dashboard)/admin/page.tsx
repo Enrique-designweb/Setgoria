@@ -6,16 +6,21 @@ import Link from "next/link";
 import { Shield, Plus, CreditCard, Users, Settings } from "lucide-react";
 import AdminMatchForm from "./AdminMatchForm";
 import AdminMatchItem from "./AdminMatchItem";
+import { Match, Prediction } from "@/src/generated/prisma/client"; // 👈 1. Importamos tipos
+
+// 👈 2. Definimos el tipo exacto
+type MatchWithPredictions = Match & { predictions: Prediction[] };
 
 export default async function AdminPage() {
   const session = await auth();
   
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
-  const matches = await prisma.match.findMany({
+  // 👈 3. Forzamos a TypeScript a saber que esto es un arreglo de MatchWithPredictions
+  const matches = (await prisma.match.findMany({
     include: { predictions: true },
     orderBy: { matchDate: 'desc' }
-  });
+  })) as MatchWithPredictions[];
 
   return (
     <div className="p-4 md:p-10 max-w-5xl mx-auto">

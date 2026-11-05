@@ -1,9 +1,11 @@
+// app/(dashboard)/admin/pagos/AdminPaymentItem.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Clock, User as UserIcon, Hash, XCircle, ShieldAlert, CreditCard } from "lucide-react";
 import { Transaction } from "@/src/generated/prisma/client";
+import { toast } from "sonner"; // 👈 Importamos Sonner
 
 type TransactionWithUser = Omit<Transaction, "amount"> & { 
   amount: number; 
@@ -15,7 +17,8 @@ export default function AdminPaymentItem({ transaction }: { transaction: Transac
   const [loading, setLoading] = useState(false);
 
   const handleApprove = async () => {
-    if (!confirm("¿Confirmas que deseas ENTREGAR la suscripción a este usuario?")) return;
+    // 1. Mostramos un toast de carga (reemplaza al confirm)
+    const toastId = toast.loading("Entregando suscripción...");
     
     setLoading(true);
     try {
@@ -26,17 +29,21 @@ export default function AdminPaymentItem({ transaction }: { transaction: Transac
       });
 
       if (res.status === 409) {
-        alert("Este pago ya fue entregado previamente.");
+        // Reemplazamos el alert() por un toast de advertencia
+        toast.warning("Este pago ya fue entregado previamente.", { id: toastId });
         router.refresh();
         return;
       }
 
       if (!res.ok) throw new Error("Error al entregar suscripción");
       
+      // Reemplazamos el éxito por un toast verde
+      toast.success("¡Suscripción entregada con éxito!", { id: toastId });
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Hubo un error al entregar la suscripción");
+      // Reemplazamos el error por un toast rojo
+      toast.error("Hubo un error al entregar la suscripción", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -86,12 +93,12 @@ export default function AdminPaymentItem({ transaction }: { transaction: Transac
         )}
       </div>
 
-      {/* BOTÓN DE ENTREGAR (Se bloquea si ya está completado) */}
+      {/* BOTÓN DE ENTREGAR (Con micro-interacción active:scale-95) */}
       <div className="flex justify-end w-full mt-2 border-t border-gray-800 pt-4">
         <button
           onClick={handleApprove}
           disabled={loading || isCompleted}
-          className={`flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-lg transition-colors w-full ${
+          className={`flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-lg transition-all w-full active:scale-95 ${
             isCompleted 
               ? "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700" 
               : "bg-green-500/10 hover:bg-green-500/20 text-green-500 border border-green-500/30"

@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { User, Mail, Calendar, CheckCircle2, AlertCircle, Camera, Upload, Loader2, History, FileText, Settings, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { APP_VERSION } from "@/lib/constants"; // 👈 Importamos la versión
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -111,7 +112,7 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-            <label className="absolute bottom-0 right-0 bg-orange-500 p-2 rounded-full cursor-pointer hover:bg-orange-600 transition-colors shadow-lg">
+            <label className="absolute bottom-0 right-0 bg-orange-500 p-2 rounded-full cursor-pointer hover:bg-orange-600 transition-colors shadow-lg active:scale-95">
               <Camera className="w-4 h-4 text-white" />
               <input type="file" accept="image/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             </label>
@@ -125,7 +126,7 @@ export default function ProfilePage() {
               </span>
             </div>
             {file && (
-              <button onClick={handleUploadAvatar} disabled={uploading} className="mt-3 text-xs bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto sm:mx-0 hover:bg-green-500/30 transition-colors disabled:opacity-50">
+              <button onClick={handleUploadAvatar} disabled={uploading} className="mt-3 text-xs bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto sm:mx-0 hover:bg-green-500/30 transition-all disabled:opacity-50 active:scale-95">
                 {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                 {uploading ? "Subiendo..." : "Guardar Foto"}
               </button>
@@ -153,7 +154,7 @@ export default function ProfilePage() {
               {message.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />} {message.text}
             </div>
           )}
-          <button type="submit" disabled={saving} className="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50">
+          <button type="submit" disabled={saving} className="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50 active:scale-95">
             {saving ? "Guardando..." : "Guardar Cambios de Datos"}
           </button>
         </form>
@@ -163,28 +164,35 @@ export default function ProfilePage() {
           <h3 className="text-sm font-bold text-gray-400 uppercase mb-4">Más Opciones</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             
-            {/* 👈 CONDICIÓN: Solo mostrar historial si NO es ADMIN */}
             {formData.role !== "ADMIN" && (
-              <Link href="/historial" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-colors">
+              <Link href="/historial" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-all active:scale-95">
                 <History className="w-5 h-5 text-orange-500" />
                 <span className="font-bold text-sm">Mi Historial de Pagos</span>
               </Link>
             )}
             
-            <Link href="/configuracion" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-colors">
+            <Link href="/configuracion" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-all active:scale-95">
               <Settings className="w-5 h-5 text-orange-500" />
               <span className="font-bold text-sm">Configuración de la App</span>
             </Link>
-            <Link href="/terminos" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-colors">
+            <Link href="/terminos" className="flex items-center gap-3 bg-[#090a0e] border border-gray-800 p-4 rounded-xl hover:border-orange-500/50 transition-all active:scale-95">
               <FileText className="w-5 h-5 text-orange-500" />
               <span className="font-bold text-sm">Términos y Condiciones</span>
             </Link>
-            <button onClick={() => signOut({ callbackUrl: '/login' })} className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 p-4 rounded-xl hover:bg-red-500/20 transition-colors text-left w-full">
+            <button onClick={() => signOut({ callbackUrl: '/login' })} className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 p-4 rounded-xl hover:bg-red-500/20 transition-all text-left w-full active:scale-95">
               <LogOut className="w-5 h-5 text-red-500" />
               <span className="font-bold text-sm text-red-500">Cerrar Sesión</span>
             </button>
           </div>
         </div>
+
+        {/* 👈 VERSIÓN DE LA APP */}
+        <div className="mt-8 pt-4 border-t border-gray-800/50 text-center">
+          <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase">
+            SETGORIA {APP_VERSION}
+          </p>
+        </div>
+
       </div>
     </div>
   );

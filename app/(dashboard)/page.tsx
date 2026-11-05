@@ -28,7 +28,10 @@ export default async function Home() {
     <main className="p-4 md:p-10 min-h-screen bg-[#090a0e] text-white">
       <div className="max-w-4xl mx-auto">
         <StoriesBar />
-        <LiveMatches />
+        
+        {/* 👈 ARREGLO: Pasamos un array vacío para que TypeScript sea feliz y no se muestre nada */}
+        <LiveMatches matches={[]} />
+        
         <h1 className="text-3xl md:text-4xl font-black mb-8 text-orange-500 uppercase italic tracking-tight mt-6">
           Pronósticos Destacados
         </h1>

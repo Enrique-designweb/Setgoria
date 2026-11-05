@@ -1,13 +1,11 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-// 👈 Si tus archivos usan "export default function Sidebar", NO uses llaves. 
-// Si usan "export function Sidebar", entonces pon llaves.
-// Asumiremos que son default exports (lo más común en Next.js).
 import Sidebar from "@/components/layout/Sidebar"; 
 import TopBar from "@/components/layout/TopBar";
 import BottomNav from "@/components/layout/BottomNav";
 import SubscriptionGate from "@/components/ui/SubscriptionGate";
+import Footer from "@/components/layout/Footer";
 
 export default async function DashboardLayout({
   children,
@@ -49,10 +47,16 @@ export default async function DashboardLayout({
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
         <TopBar />
-        <main className="flex-1 overflow-x-hidden pb-20 md:pb-0">
+        <main className="flex-1 overflow-x-hidden pb-20 md:pb-0 flex flex-col">
+          <div className="flex-1">
           <SubscriptionGate isExpired={shouldBlock}>
             {children}
           </SubscriptionGate>
+          </div>
+          <div className="hidden md:block">
+            <Footer />
+            </div>
+
         </main>
         <BottomNav />
       </div>

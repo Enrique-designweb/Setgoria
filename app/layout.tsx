@@ -1,9 +1,13 @@
+// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/app/providers";
 import PWARegister from "@/components/PWARegister";
 
 export const metadata: Metadata = {
+  // 👈 AÑADIMOS ESTA LÍNEA
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://setgoria.vercel.app"),
+  
   title: {
     default: "SETGORIA | Pronósticos Deportivos",
     template: "%s | SETGORIA",
