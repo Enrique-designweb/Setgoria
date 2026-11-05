@@ -4,16 +4,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-// 👈 Añadimos LayoutDashboard a los imports
-import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard } from "lucide-react";
+import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard, CreditCard } from "lucide-react";
 import { clsx } from "clsx";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  // Menú base para todos los usuarios
-  const menuItems = [
+  const isAdmin = session?.user?.role === "ADMIN";
+
+  // Menú para usuarios normales
+  const userMenuItems = [
     { name: "Inicio", href: "/", icon: Home },
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Tenis", href: "/tenis", icon: Trophy },
@@ -24,12 +25,19 @@ export default function Sidebar() {
     { name: "Términos", href: "/terminos", icon: Info },
   ];
 
-  // 👈 Si el usuario es ADMIN, le añadimos el enlace al panel
-  if (session?.user?.role === "ADMIN") {
-    menuItems.push({ name: "Admin Panel", href: "/admin", icon: LayoutDashboard });
-    // Nota: Si quieres que "Configuración" también sea exclusivo de admin, puedes quitarlo del menú base y ponerlo aquí.
-    menuItems.push({ name: "Configuración", href: "/configuracion", icon: Settings });
-  }
+  // Menú para el Administrador (sin suscripción, con panel de control)
+  const adminMenuItems = [
+    { name: "Inicio", href: "/", icon: Home },
+    { name: "Panel de Admin", href: "/admin", icon: LayoutDashboard },
+    { name: "Pagos Pendientes", href: "/admin/pagos", icon: CreditCard },
+    { name: "Gestión Usuarios", href: "/admin/usuarios", icon: Users },
+    { name: "Fútbol", href: "/futbol", icon: Zap },
+    { name: "Tenis", href: "/tenis", icon: Trophy },
+    { name: "Comunidad", href: "/comunidad", icon: Users },
+    { name: "Configuración", href: "/configuracion", icon: Settings },
+  ];
+
+  const menuItems = isAdmin ? adminMenuItems : userMenuItems;
 
   return (
     <div className="flex flex-col h-full w-full py-6 px-4">

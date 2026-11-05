@@ -4,6 +4,8 @@ import MatchCard from "@/components/ui/MatchCard";
 import { auth } from "@/auth";
 import { Target } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default async function PronosticosPage() {
   const session = await auth();
   
@@ -21,18 +23,22 @@ export default async function PronosticosPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto text-white">
+    <div className="p-4 md:p-10 max-w-4xl mx-auto text-white">
       <div className="flex items-center gap-3 mb-8">
         <Target className="w-8 h-8 text-orange-500" />
         <div>
-          <h1 className="text-3xl font-black italic text-orange-500 uppercase">Todos los Pronósticos</h1>
-          <p className="text-sm text-gray-400 mt-1">Análisis avanzado de todos los partidos disponibles.</p>
+          <h1 className="text-2xl md:text-3xl font-black italic text-orange-500 uppercase">Todos los Pronósticos</h1>
         </div>
       </div>
 
       <div className="flex flex-col gap-6">
         {matches.map((match) => (
-          <MatchCard key={match.id} match={match} hasActiveSubscription={hasActiveSubscription} />
+          <MatchCard 
+            key={match.id} 
+            match={match} 
+            hasActiveSubscription={hasActiveSubscription} 
+            isAdmin={session?.user?.role === "ADMIN"} 
+          />
         ))}
       </div>
     </div>

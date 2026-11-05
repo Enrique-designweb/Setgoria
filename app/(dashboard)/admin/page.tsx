@@ -30,7 +30,7 @@ export default async function AdminPage() {
         </h1>
       </div>
 
-      {/* 👈 NUEVO: Accesos Rápidos para Móvil (Grid) */}
+      {/* 👈 Accesos Rápidos para Móvil */}
       <div className="grid grid-cols-2 md:hidden gap-3 mb-8">
         <Link href="/admin/pagos" className="bg-[#14161d] border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
           <CreditCard className="w-6 h-6 text-orange-500" />
@@ -54,13 +54,13 @@ export default async function AdminPage() {
         <Link href="/admin/pagos" className="bg-[#14161d] hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
           <CreditCard className="w-4 h-4 text-orange-500" /> Gestionar Pagos
         </Link>
-        <Link href="/configuracion" className="bg-[#14161d] hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-          <Settings className="w-4 h-4 text-orange-500" /> Configuración
-        </Link>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
+      {/* Layout Responsive (Columna en móvil, fila en PC) */}
+      <div className="flex flex-col gap-6 md:flex-row md:gap-8">
+        
+        {/* Formulario */}
+        <div className="w-full md:w-1/3">
           <div className="bg-[#14161d] border border-gray-800 rounded-2xl p-5 md:p-6 md:sticky md:top-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Plus className="w-5 h-5 text-orange-500" /> Nuevo Partido
@@ -69,7 +69,8 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <div className="md:col-span-2">
+        {/* Lista de Partidos */}
+        <div className="w-full md:w-2/3">
           <div className="bg-[#14161d] border border-gray-800 rounded-2xl p-5 md:p-6">
             <h2 className="text-lg font-bold text-white mb-4">Partidos en la Plataforma</h2>
             

@@ -5,47 +5,29 @@ import Link from 'next/link';
 
 type MatchWithPredictions = Match & { predictions: Prediction[] };
 
-export default function MatchCard({ match, hasActiveSubscription }: { match: MatchWithPredictions, hasActiveSubscription: boolean }) {
+export default function MatchCard({ match, hasActiveSubscription, isAdmin }: { match: MatchWithPredictions, hasActiveSubscription: boolean, isAdmin?: boolean }) {
   const matchDate = new Date(match.matchDate).toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit',
   });
 
-  // Colores según el deporte
-  const sportColors = {
-    FUTBOL: 'bg-green-500/10 text-green-500 border-green-500/20',
-    TENIS: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-    BASQUETBOL: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-  };
-
-  const currentSportColor = sportColors[match.sport as keyof typeof sportColors] || sportColors.FUTBOL;
-
   return (
-    <div className="bg-set-surface border border-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-xl transition-all hover:border-gray-700">
-      
-      {/* Header: Liga, Deporte y Hora */}
+    <div className="bg-[#14161d] border border-gray-800 rounded-2xl p-5 md:p-6 w-full max-w-2xl shadow-xl transition-all hover:border-gray-700">
       <div className="flex justify-between text-[11px] text-gray-400 mb-5 font-bold tracking-wider">
-        <div className="flex items-center gap-2">
-          {/* 👈 Badge del Deporte */}
-          <span className={`px-2 py-0.5 rounded border text-[9px] uppercase tracking-wider ${currentSportColor}`}>
-            {match.sport}
-          </span>
-          <span>{match.league.toUpperCase()}</span>
-        </div>
+        <span>{match.league.toUpperCase()}</span>
         <span>HOY, {matchDate}</span>
       </div>
       
-      {/* Equipos */}
       <div className="flex justify-between items-center mb-8">
         <h3 className="font-bold text-lg text-white w-1/3">{match.homeTeam}</h3>
         <span className="text-red-500 font-black italic text-sm px-4">VS</span>
         <h3 className="font-bold text-lg text-white text-right w-1/3">{match.awayTeam}</h3>
       </div>
 
-      {/* Predicciones (Lógica Premium) */}
       <div className="flex flex-col gap-5">
         {match.predictions.map((pred) => {
-          const isLocked = pred.isPremium && !hasActiveSubscription;
+          // 👈 LÓGICA MAESTRA: Si es admin, NUNCA se bloquea
+          const isLocked = pred.isPremium && !hasActiveSubscription && !isAdmin;
 
           return (
             <div key={pred.id} className="flex flex-col gap-2 relative">

@@ -24,18 +24,23 @@ export default async function TenisPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto text-white">
+    <div className="p-4 md:p-10 max-w-4xl mx-auto text-white">
       <div className="flex items-center gap-3 mb-8">
         <Trophy className="w-8 h-8 text-orange-500" />
-        <h1 className="text-3xl font-black italic text-orange-500 uppercase">Tenis de Élite</h1>
+        <h1 className="text-2xl md:text-3xl font-black italic text-orange-500 uppercase">Partidos de Tenis</h1>
       </div>
       
       {matches.length === 0 ? (
-        <p className="text-gray-400">No hay partidos de tenis programados por ahora.</p>
+        <p className="text-gray-400">No hay partidos programados.</p>
       ) : (
         <div className="flex flex-col gap-6">
           {matches.map((match) => (
-            <MatchCard key={match.id} match={match} hasActiveSubscription={hasActiveSubscription} />
+            <MatchCard 
+              key={match.id} 
+              match={match} 
+              hasActiveSubscription={hasActiveSubscription} 
+              isAdmin={session?.user?.role === "ADMIN"} 
+            />
           ))}
         </div>
       )}

@@ -6,6 +6,7 @@ import { CreditCard, ArrowLeft } from "lucide-react";
 import AdminPaymentItem from "./AdminPaymentItem";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
 export default async function AdminPaymentsPage() {
   const session = await auth();
   
