@@ -99,7 +99,7 @@ export async function POST(req: Request) {
 
     // 👈 6. ENVIAR EL CORREO CON EL CÓDIGO OTP
     if (plainCode && session.user.email) {
-      await sendVerificationEmail(session.user.email, plainCode, plan);
+      await sendVerificationEmail(session.user.email, plainCode);
     }
 
     // 7. Flujo QvaPay (Automático)
