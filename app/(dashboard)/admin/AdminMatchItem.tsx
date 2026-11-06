@@ -128,7 +128,7 @@ export default function AdminMatchItem({ match }: { match: MatchWithPredictions 
       {/* Cabecera: Liga y Fecha */}
       <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
         <span className="truncate pr-2">{match.league}</span>
-        <span className="shrink-0">{new Date(match.matchDate).toLocaleDateString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
+        <span className="shrink-0">{new Date(match.matchDate).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
       </div>
 
       {/* Equipos */}

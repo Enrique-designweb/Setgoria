@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { Telegraf, Markup } from "telegraf";
 import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
@@ -18,20 +19,19 @@ bot.start(async (ctx) => {
     });
 
     return ctx.reply(
-      `¡Bienvenido a *SETGORIA Sport*, ${username}! ⚽🎾\n\nSoy tu asistente de pronósticos. ¿Qué quieres hacer hoy?`,
+      `¡Bienvenido a *SETGORIA Sport*, ${username}! ⚽🎾\n\nSoy tu asistente. ¿Qué quieres hacer hoy?`,
       {
         parse_mode: "Markdown",
         ...Markup.keyboard([
           ["⚽ Partidos", "📊 Pronósticos"],
           ["👑 Premium", "💳 Pagos"],
-          ["🆘 Soporte"]
+          ["🔐 Login Web", "🆘 Soporte"]
         ]).resize(),
       }
     );
-  } catch (error: unknown) {
-    // 👈 CORREGIDO: Ahora usamos 'error' para loguearlo
-    console.error("Error guardando usuario en /start:", error);
-    return ctx.reply("Hubo un error al registrarte. Intenta de nuevo.");
+  } catch (error) {
+    console.error("Error en /start:", error);
+    return ctx.reply("Hubo un error al registrarte.");
   }
 });
 
@@ -56,11 +56,9 @@ bot.hears("⚽ Partidos", async (ctx) => {
       mensaje += `${estado}\n\n`;
     });
     
-    mensaje += `_Usa /pronosticos para ver las predicciones._`;
     return ctx.replyWithMarkdown(mensaje);
-  } catch (error: unknown) {
-    // 👈 CORREGIDO: Ahora usamos 'error' para loguearlo
-    console.error("Error al cargar partidos en el bot:", error);
+  } catch (error) {
+    console.error("Error al cargar partidos:", error);
     return ctx.reply("Error al cargar partidos.");
   }
 });
@@ -89,14 +87,9 @@ bot.hears("📊 Pronósticos", async (ctx) => {
       mensaje += `\n`;
     });
     
-    mensaje += `💡 _Los pronósticos 👑 son exclusivos para usuarios Premium._`;
-    
-    return ctx.replyWithMarkdown(mensaje, Markup.inlineKeyboard([
-      [Markup.button.callback("👑 Hacerme Premium", "premium_info")]
-    ]));
-  } catch (error: unknown) {
-    // 👈 CORREGIDO: Ahora usamos 'error' para loguearlo
-    console.error("Error al cargar pronósticos en el bot:", error);
+    return ctx.replyWithMarkdown(mensaje);
+  } catch (error) {
+    console.error("Error al cargar pronósticos:", error);
     return ctx.reply("Error al cargar pronósticos.");
   }
 });
@@ -104,12 +97,13 @@ bot.hears("📊 Pronósticos", async (ctx) => {
 // --- COMANDO /premium ---
 bot.hears("👑 Premium", async (ctx) => {
   return ctx.reply(
-    "👑 *SUSCRIPCIÓN PREMIUM*\n\nDesbloquea todos los pronósticos y estadísticas en vivo.\n\nPara ver tu estado actual o renovar, usa los botones de abajo.",
+    "👑 *SUSCRIPCIÓN PREMIUM*\n\nDesbloquea todos los pronósticos y estadísticas en vivo.",
     {
       parse_mode: "Markdown",
       ...Markup.inlineKeyboard([
-        [Markup.button.url("💳 Ir a la Web (Renovar)", "https://setgoria.vercel.app/suscripcion")],
-        [Markup.button.callback("📊 Consultar mi estado", "consultar_estado")]
+        [Markup.button.url("💳 QvaPay (USD)", "https://setgoria.vercel.app/suscripcion?method=QVAPAY")],
+        [Markup.button.url("🏦 Transfermóvil (CUP)", "https://setgoria.vercel.app/suscripcion?method=TRANSFERMOVIL")],
+        [Markup.button.url("🌐 Ir a la Web", "https://setgoria.vercel.app/suscripcion")],
       ])
     }
   );
@@ -118,58 +112,81 @@ bot.hears("👑 Premium", async (ctx) => {
 // --- COMANDO /pagos ---
 bot.hears("💳 Pagos", async (ctx) => {
   return ctx.reply(
-    "💳 *MÉTODOS DE PAGO*\n\nAceptamos las siguientes opciones:\n\n1️⃣ *QvaPay* (Pago automático en USD)\n2️⃣ *Transfermóvil / Tarjeta* (Pago manual en CUP)\n3️⃣ *USDT (TRC-20)* (Criptomoneda)\n\nPara pagar, visita la web:",
+    "💳 *MÉTODOS DE PAGO*\n\n1️⃣ *QvaPay* (Automático)\n2️⃣ *Transfermóvil* (Manual)\n3️⃣ *USDT* (Cripto)\n\nElige tu método:",
     {
       parse_mode: "Markdown",
       ...Markup.inlineKeyboard([
-        [Markup.button.url("🌐 Ir a Pagar", "https://setgoria.vercel.app/suscripcion")]
+        [Markup.button.url("Pagar con QvaPay", "https://setgoria.vercel.app/suscripcion?method=QVAPAY")],
+        [Markup.button.url("Pagar con Transfermóvil", "https://setgoria.vercel.app/suscripcion?method=TRANSFERMOVIL")],
+        [Markup.button.url("Pagar con USDT", "https://setgoria.vercel.app/suscripcion?method=USDT")],
       ])
     }
   );
 });
 
+// --- COMANDO /login (OTP para la Web) ---
+bot.hears("🔐 Login Web", async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  
+  try {
+    const telUser = await prisma.telegramUser.findUnique({ where: { chatId } });
+    
+    if (!telUser || !telUser.userId) {
+      return ctx.reply("⚠️ Primero debes vincular tu correo. Escribe tu correo electrónico a continuación:");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: telUser.userId } });
+    if (!user || !user.email) return ctx.reply("Error: No se encontró tu usuario.");
+
+    // Generamos OTP de 6 dígitos
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(otpCode).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { twoFactorCode: hashedOtp, twoFactorExpiresAt: expiresAt }
+    });
+
+    return ctx.reply(`🔐 *Tu código de acceso es:* \`${otpCode}\`\n\nEste código expira en 10 minutos. Úsalo en la web para iniciar sesión.`, { parse_mode: "Markdown" });
+  } catch (error) {
+    console.error("Error generando OTP:", error);
+    return ctx.reply("Error al generar el código de acceso.");
+  }
+});
+
 // --- COMANDO /soporte ---
 bot.hears("🆘 Soporte", async (ctx) => {
   return ctx.reply(
-    "🆘 *SOPORTE SETGORIA*\n\n¿Tienes dudas o problemas con tu cuenta? Contáctanos:\n\n📧 Email: soporte@setgoria.com\n💬 WhatsApp: +53 5555 5555\n\nTe responderemos lo antes posible.",
+    "🆘 *SOPORTE TÉCNICO SETGORIA*\n\n¿Tienes problemas con tu cuenta o pagos?\n\n📧 Email: leonardofonseca302@gmail.com\n💬 WhatsApp: +53 51756491\n\nTe responderemos lo antes posible.",
     { parse_mode: "Markdown" }
   );
 });
 
-// --- MANEJO DE CORREOS (Para consultar suscripción) ---
-bot.action("consultar_estado", async (ctx) => {
-  await ctx.answerCbQuery();
-  await ctx.reply("Por favor, escribe el correo electrónico que usaste en SETGORIA:");
-});
-
+// --- MANEJO DE TEXTO (Vincular Correo) ---
 bot.on("text", async (ctx) => {
   const text = ctx.message.text;
+  const chatId = ctx.chat.id.toString();
   
+  // Si el texto es un correo, buscamos al usuario y vinculamos
   if (text.includes("@") && text.includes(".")) {
     try {
       const user = await prisma.user.findUnique({
         where: { email: text.toLowerCase().trim() },
-        include: { subscriptions: { where: { status: "ACTIVE", expiresAt: { gt: new Date() } } } }
       });
 
-      if (!user) return ctx.reply("❌ No encontré ninguna cuenta con ese correo. Verifica e intenta de nuevo.");
+      if (!user) return ctx.reply("❌ No encontré ninguna cuenta con ese correo.");
 
-      const activeSub = user.subscriptions[0];
-      if (activeSub) {
-        const fecha = activeSub.expiresAt.toLocaleDateString("es-ES", { dateStyle: "long" });
-        return ctx.reply(`✅ *${user.name || 'Usuario'}*, tu suscripción *${activeSub.plan}* está activa hasta el *${fecha}*.`, { parse_mode: "Markdown" });
-      } else {
-        return ctx.reply(
-          `⚠️ *${user.name || 'Usuario'}*, no tienes una suscripción activa.\n\n¡Hazte Premium ahora!`, 
-          { 
-            parse_mode: "Markdown",
-            ...Markup.inlineKeyboard([[Markup.button.url("👑 Comprar Premium", "https://setgoria.vercel.app/suscripcion")]])
-          }
-        );
-      }
-    } catch (error: unknown) {
-       console.error("Error consultando suscripción por email:", error);
-       return ctx.reply("Error al consultar tu cuenta. Intenta más tarde.");
+      // Vinculamos el TelegramUser con el User
+      await prisma.telegramUser.update({
+        where: { chatId },
+        data: { userId: user.id }
+      });
+
+      return ctx.reply(`✅ ¡Cuenta vinculada con éxito! Ahora eres *${user.name || 'Usuario'}*.\n\nYa puedes usar el botón de *🔐 Login Web* para obtener tu código de acceso.`, { parse_mode: "Markdown" });
+    } catch (error) {
+      console.error("Error vinculando correo:", error);
+      return ctx.reply("Error al buscar tu cuenta. Intenta más tarde.");
     }
   }
 });
@@ -184,7 +201,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     await bot.handleUpdate(body);
     return NextResponse.json({ ok: true });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Error procesando webhook de Telegram:", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
