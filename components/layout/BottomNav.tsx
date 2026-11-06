@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Home, Zap, Trophy, Users, Crown, User, LayoutDashboard, CreditCard } from "lucide-react";
+// 👈 Aquí eliminamos "Users" de la importación
+import { Home, Zap, Crown, User, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react"; 
 import { clsx } from "clsx";
 
 export default function BottomNav() {
@@ -15,7 +16,7 @@ export default function BottomNav() {
   const userNavItems = [
     { name: "Inicio", href: "/", icon: Home },
     { name: "Fútbol", href: "/futbol", icon: Zap },
-    { name: "Tenis", href: "/tenis", icon: Trophy },
+    { name: "Stats", href: "/estadisticas", icon: TrendingUp },
     { name: "Premium", href: "/suscripcion", icon: Crown },
     { name: "Perfil", href: "/perfil", icon: User },
   ];
@@ -25,11 +26,10 @@ export default function BottomNav() {
     { name: "Inicio", href: "/", icon: Home },
     { name: "Panel", href: "/admin", icon: LayoutDashboard },
     { name: "Pagos", href: "/admin/pagos", icon: CreditCard },
-    { name: "Comunidad", href: "/comunidad", icon: Users },
+    { name: "Stats", href: "/estadisticas", icon: TrendingUp },
     { name: "Perfil", href: "/perfil", icon: User },
   ];
 
-  // Lógica Senior: Si es Admin, usa adminNavItems, si no, userNavItems
   const navItems = session?.user?.role === "ADMIN" ? adminNavItems : userNavItems;
 
   return (

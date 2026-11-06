@@ -20,6 +20,9 @@ export default async function FutbolPage() {
         matchDate: m.matchDate,
         sport: "FUTBOL",
         status: m.status,
+        homeScore: m.homeScore,
+        awayScore: m.awayScore,
+        elapsed: m.elapsed,
         predictions: [],
       }));
     }
@@ -34,14 +37,15 @@ export default async function FutbolPage() {
       orderBy: { matchDate: "asc" },
       take: 50,
     });
+    
     matches = dbMatches.map((m) => ({
       ...m,
       matchDate: m.matchDate.toISOString(),
-      status: "SCHEDULED" 
+      status: m.status as "NS" | "LIVE" | "HT" | "FT" | "CANC", // 👈 Casteo seguro
     }));
   }
 
-  const live = matches.filter((m) => m.status === "LIVE");
+  const live = matches.filter((m) => m.status === "LIVE" || m.status === "HT");
 
   return (
     <div className="p-4 md:p-6 pb-24">

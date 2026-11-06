@@ -1,3 +1,4 @@
+// public/sw.js
 const CACHE_VERSION = "v1";
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -27,7 +28,6 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // No cachear API, admin, ni auth
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/admin") ||
@@ -37,7 +37,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navegación: NetworkFirst → fallback cache → offline
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -53,7 +52,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Assets estáticos: CacheFirst
   if (["style", "script", "font", "image"].includes(request.destination)) {
     event.respondWith(
       caches.match(request).then(
@@ -69,4 +67,24 @@ self.addEventListener("fetch", (event) => {
       )
     );
   }
+});
+
+// 👈 EVENTOS DE PUSH (Fuera del fetch)
+self.addEventListener('push', function(event) {
+  if (event.data) {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [100, 50, 100],
+      data: { url: data.url || '/' }
+    };
+    event.waitUntil(self.registration.showNotification(data.title, options));
+  }
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url));
 });

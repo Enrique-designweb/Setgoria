@@ -3,26 +3,24 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-// 👈 Quitamos 'Save' de la importación
-import { Bell, Moon, Sun, KeyRound, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Bell, Moon, Sun, KeyRound } from "lucide-react";
+import { toast } from "sonner";
+import PushNotificationButton from "@/components/ui/PushNotificationButton"; // 👈 Importamos
 
 export default function ConfiguracionPage() {
   const { theme, setTheme } = useTheme();
-  
-  // Estados para notificaciones
-  const [notifications, setNotifications] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(false);
 
-  // Estados para cambio de contraseña
   const [passData, setPassData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  const [passStatus, setPassStatus] = useState({ loading: false, message: "", type: "" });
+  const [passStatus, setPassStatus] = useState({ loading: false });
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPassStatus({ loading: true, message: "", type: "" });
+    setPassStatus({ loading: true });
 
     if (passData.newPassword !== passData.confirmPassword) {
-      setPassStatus({ loading: false, message: "Las contraseñas nuevas no coinciden", type: "error" });
+      toast.error("Las contraseñas nuevas no coinciden");
+      setPassStatus({ loading: false });
       return;
     }
 
@@ -39,20 +37,22 @@ export default function ConfiguracionPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      setPassStatus({ loading: false, message: "¡Contraseña actualizada con éxito!", type: "success" });
+      toast.success("¡Contraseña actualizada con éxito!");
       setPassData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (error) {
-      setPassStatus({ loading: false, message: error instanceof Error ? error.message : "Error al cambiar", type: "error" });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Error al cambiar");
+    } finally {
+      setPassStatus({ loading: false });
     }
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-3xl mx-auto text-set-text">
+    <div className="p-6 md:p-10 max-w-3xl mx-auto text-set-text pb-24">
       <h1 className="text-3xl font-black italic text-orange-500 uppercase mb-8">Configuración</h1>
 
       <div className="bg-set-surface border border-set-border rounded-2xl p-6 md:p-8 space-y-10">
         
-        {/* 1. Apariencia (Temas) */}
+        {/* 1. Apariencia */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <Sun className="w-5 h-5 text-orange-500" /> Apariencia
@@ -63,29 +63,17 @@ export default function ConfiguracionPage() {
               <p className="text-xs text-set-muted">Elige el nivel de contraste que prefieras.</p>
             </div>
             <div className="flex bg-set-surface p-1 rounded-lg border border-set-border">
-              <button 
-                onClick={() => setTheme("theme-confort")} 
-                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 text-xs font-bold ${
-                  theme === 'theme-confort' ? 'bg-orange-500 text-white' : 'text-set-muted hover:text-white'
-                }`} 
-                title="Modo Confort (Gris Oscuro)"
-              >
+              <button onClick={() => setTheme("theme-confort")} className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 text-xs font-bold ${theme === 'theme-confort' ? 'bg-orange-500 text-white' : 'text-set-muted hover:text-white'}`}>
                 <Sun className="w-4 h-4" /> Confort
               </button>
-              <button 
-                onClick={() => setTheme("theme-oled")} 
-                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 text-xs font-bold ${
-                  theme === 'theme-oled' ? 'bg-orange-500 text-white' : 'text-set-muted hover:text-white'
-                }`} 
-                title="Modo OLED (Negro Puro)"
-              >
+              <button onClick={() => setTheme("theme-oled")} className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 text-xs font-bold ${theme === 'theme-oled' ? 'bg-orange-500 text-white' : 'text-set-muted hover:text-white'}`}>
                 <Moon className="w-4 h-4" /> OLED
               </button>
             </div>
           </div>
         </section>
 
-        {/* 2. Seguridad (Cambio de Contraseña) */}
+        {/* 2. Seguridad */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <KeyRound className="w-5 h-5 text-orange-500" /> Seguridad
@@ -112,14 +100,7 @@ export default function ConfiguracionPage() {
               </div>
             </div>
 
-            {passStatus.message && (
-              <div className={`p-3 rounded-lg flex items-center gap-2 text-xs font-medium ${passStatus.type === "success" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
-                {passStatus.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                {passStatus.message}
-              </div>
-            )}
-
-            <button type="submit" disabled={passStatus.loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg text-sm transition-colors disabled:opacity-50">
+            <button type="submit" disabled={passStatus.loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg text-sm transition-all active:scale-95 disabled:opacity-50">
               {passStatus.loading ? "Actualizando..." : "Actualizar Contraseña"}
             </button>
           </form>
@@ -131,15 +112,9 @@ export default function ConfiguracionPage() {
             <Bell className="w-5 h-5 text-orange-500" /> Notificaciones
           </h2>
           <div className="space-y-3">
-            <div className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border">
-              <div>
-                <p className="font-bold text-sm">Alertas Push (Navegador)</p>
-                <p className="text-xs text-set-muted">Avisos de nuevos pronósticos y pagos.</p>
-              </div>
-              <button onClick={() => setNotifications(!notifications)} className={`w-12 h-6 rounded-full transition-colors relative ${notifications ? 'bg-orange-500' : 'bg-gray-700'}`}>
-                <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notifications ? 'translate-x-6' : ''}`} />
-              </button>
-            </div>
+            {/* 👈 AQUÍ INTEGRAMOS EL BOTÓN PUSH REAL */}
+            <PushNotificationButton />
+
             <div className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border">
               <div>
                 <p className="font-bold text-sm">Correos Informativos</p>

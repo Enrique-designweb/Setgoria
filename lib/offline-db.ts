@@ -6,7 +6,7 @@ const STORE = "matches";
 
 export interface OfflinePrediction {
   id: string;
-  matchId?: string; // 👈 Añadido
+  matchId?: string;
   type: string;
   probability: number;
   isPremium: boolean;
@@ -19,7 +19,11 @@ export interface OfflineMatch {
   awayTeam: string;
   matchDate: string; 
   sport: string;
-  status?: "SCHEDULED" | "LIVE" | "FINISHED"; // 👈 Añadido
+  // 👈 Nuevos campos
+  status?: "NS" | "LIVE" | "HT" | "FT" | "CANC";
+  homeScore?: number | null;
+  awayScore?: number | null;
+  elapsed?: number | null;
   predictions: OfflinePrediction[];
 }
 

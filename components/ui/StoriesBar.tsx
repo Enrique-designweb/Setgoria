@@ -35,6 +35,7 @@ export default function StoriesBar() {
                     alt={story.title} 
                     fill
                     sizes="(max-width: 768px) 64px, 80px"
+                    priority
                     className="object-cover" 
                   />
                 </div>

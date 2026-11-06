@@ -1,4 +1,3 @@
-// lib/football-api.ts
 import { unstable_cache } from "next/cache";
 
 const BASE_URL = "https://v3.football.api-sports.io";
@@ -30,15 +29,22 @@ export interface NormalizedMatch {
   awayTeam: string;
   matchDate: string;
   sport: "FUTBOL";
-  status: "SCHEDULED" | "LIVE" | "FINISHED";
+  status: "NS" | "LIVE" | "HT" | "FT" | "CANC";
+  homeScore: number | null;
+  awayScore: number | null;
+  elapsed: number | null;
   homeLogo?: string;
   awayLogo?: string;
 }
 
 function normalizeFixture(f: ApiFootballFixture): NormalizedMatch {
   const short = f.fixture.status.short;
-  const isLive = ["1H", "2H", "HT", "ET", "P", "LIVE"].includes(short);
-  const isFinished = ["FT", "AET", "PEN", "CANC"].includes(short);
+  
+  let status: "NS" | "LIVE" | "HT" | "FT" | "CANC" = "NS";
+  if (["1H", "2H", "ET", "P", "LIVE"].includes(short)) status = "LIVE";
+  else if (short === "HT") status = "HT";
+  else if (["FT", "AET", "PEN"].includes(short)) status = "FT";
+  else if (short === "CANC") status = "CANC";
 
   return {
     id: `fb-${f.fixture.id}`,
@@ -47,7 +53,10 @@ function normalizeFixture(f: ApiFootballFixture): NormalizedMatch {
     awayTeam: f.teams.away.name,
     matchDate: f.fixture.date,
     sport: "FUTBOL",
-    status: isLive ? "LIVE" : isFinished ? "FINISHED" : "SCHEDULED",
+    status,
+    homeScore: f.goals.home,
+    awayScore: f.goals.away,
+    elapsed: f.fixture.status.elapsed,
     homeLogo: f.teams.home.logo,
     awayLogo: f.teams.away.logo,
   };
@@ -61,26 +70,14 @@ async function fetchFromAPI(): Promise<NormalizedMatch[]> {
 
   const res = await fetch(
     `${BASE_URL}/fixtures?date=${new Date().toISOString().slice(0, 10)}&timezone=America/Havana`,
-    {
-      headers: { "x-apisports-key": API_KEY },
-      cache: "no-store",
-    }
+    { headers: { "x-apisports-key": API_KEY }, cache: "no-store" }
   );
 
-  if (!res.ok) {
-    console.error("Football API error:", res.status, await res.text());
-    return [];
-  }
-
+  if (!res.ok) return [];
   const data: ApiFootballResponse = await res.json();
-  if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
-    console.error("Football API errors:", data.errors);
-  }
-
   return data.response.map(normalizeFixture);
 }
 
-// ✅ Cache de 5 minutos
 export const getFootballMatches = unstable_cache(
   async () => {
     try {

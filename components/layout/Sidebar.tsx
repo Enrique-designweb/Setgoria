@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard, CreditCard } from "lucide-react";
+import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 
 export default function Sidebar() {
@@ -18,6 +18,7 @@ export default function Sidebar() {
     { name: "Inicio", href: "/", icon: Home },
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Tenis", href: "/tenis", icon: Trophy },
+    { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp }, // 👈 Nuevo
     { name: "Comunidad", href: "/comunidad", icon: Users },
     { name: "Pronósticos", href: "/pronosticos", icon: BarChart2 },
     { name: "Mi suscripción", href: "/suscripcion", icon: Crown },
@@ -25,12 +26,13 @@ export default function Sidebar() {
     { name: "Términos", href: "/terminos", icon: Info },
   ];
 
-  // Menú para el Administrador (sin suscripción, con panel de control)
+  // Menú para el Administrador
   const adminMenuItems = [
     { name: "Inicio", href: "/", icon: Home },
     { name: "Panel de Admin", href: "/admin", icon: LayoutDashboard },
     { name: "Pagos Pendientes", href: "/admin/pagos", icon: CreditCard },
     { name: "Gestión Usuarios", href: "/admin/usuarios", icon: Users },
+    { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp }, // 👈 Nuevo
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Tenis", href: "/tenis", icon: Trophy },
     { name: "Comunidad", href: "/comunidad", icon: Users },

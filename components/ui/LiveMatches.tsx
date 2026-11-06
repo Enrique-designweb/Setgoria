@@ -1,15 +1,11 @@
-// components/ui/LiveMatches.tsx
 import { Radio } from "lucide-react";
-import { OfflineMatch } from "@/lib/offline-db"; // 👈 Importamos el tipo
+import { OfflineMatch } from "@/lib/offline-db";
 
-// 1. Definimos la interfaz de las props
 interface LiveMatchesProps {
   matches: OfflineMatch[];
 }
 
-// 2. Recibimos "matches" como prop
 export default function LiveMatches({ matches }: LiveMatchesProps) {
-  // Si no hay partidos en vivo, no mostramos nada
   if (!matches || matches.length === 0) return null;
 
   return (
@@ -22,23 +18,33 @@ export default function LiveMatches({ matches }: LiveMatchesProps) {
       </div>
       
       <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-        {/* 3. Mapeamos los partidos reales */}
         {matches.map((match) => (
           <div key={match.id} className="min-w-70 bg-[#14161d] border border-red-500/30 rounded-xl p-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-              EN VIVO
-            </div>
             
-            <div className="flex justify-between items-center mb-2 mt-2">
-              <span className="text-sm font-bold text-white w-1/3 truncate">{match.homeTeam}</span>
-              
-              {/* Marcador temporal (puedes conectarlo a tu API de resultados luego) */}
-              <span className="text-lg font-black text-orange-500 px-2">- : -</span>
-              
-              <span className="text-sm font-bold text-white text-right w-1/3 truncate">{match.awayTeam}</span>
+            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+              {match.status === 'HT' ? 'Descanso' : match.elapsed ? `${match.elapsed}'` : 'EN VIVO'}
             </div>
-            
-            <p className="text-xs text-gray-400 text-center truncate">{match.league}</p>
+
+            <p className="text-[10px] text-gray-400 font-bold uppercase mb-3 truncate pr-12">
+              {match.league}
+            </p>
+
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-xs font-bold text-white text-center leading-tight line-clamp-1">{match.homeTeam}</span>
+              </div>
+
+              <div className="flex items-center gap-2 px-3">
+                <span className="text-2xl font-black text-white">{match.homeScore ?? 0}</span>
+                <span className="text-gray-500 font-bold">-</span>
+                <span className="text-2xl font-black text-white">{match.awayScore ?? 0}</span>
+              </div>
+
+              <div className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-xs font-bold text-white text-center leading-tight line-clamp-1">{match.awayTeam}</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>

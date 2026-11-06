@@ -52,6 +52,21 @@ enum Currency {
   USDT
 }
 
+// 👈 NUEVO ENUM PARA EL ESTADO DEL PARTIDO
+enum MatchStatus {
+  NS    // Not Started (Por comenzar)
+  LIVE  // En Vivo
+  HT    // Half Time (Medio tiempo)
+  FT    // Full Time (Finalizado)
+  CANC  // Cancelado
+}
+
+enum PredictionResult {
+  PENDING
+  WON
+  LOST
+}
+
 // --- MODELOS ---
 model Match {
   id          String       @id @default(cuid())
@@ -60,7 +75,18 @@ model Match {
   awayTeam    String
   matchDate   DateTime
   sport       Sport        @default(FUTBOL)
+  
+  // 👈 NUEVOS CAMPOS PARA LIVE SCORES
+  homeScore   Int?
+  awayScore   Int?
+  status      MatchStatus  @default(NS)
+  elapsed     Int?
+
   predictions Prediction[]
+
+  // 👈 Índices para búsquedas ultrarrápidas (Fase 2)
+  @@index([matchDate])
+  @@index([status])
 }
 
 model Prediction {
@@ -70,6 +96,7 @@ model Prediction {
   type        String
   probability Int
   isPremium   Boolean @default(false)
+  result      PredictionResult @default(PENDING)
 }
 
 model User {
@@ -92,6 +119,7 @@ model User {
   sessions      Session[]
   notifications Notification[]
   comments      Comment[]
+  pushSubscriptions PushSubscription[]
 }
 
 model AdminLog {
@@ -186,5 +214,15 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
   read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
   createdAt DateTime @default(now())
 }
