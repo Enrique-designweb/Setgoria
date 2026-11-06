@@ -5,15 +5,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { User, Mail, Calendar, CheckCircle2, AlertCircle, Camera, Upload, Loader2, History, FileText, Settings, LogOut } from "lucide-react";
+import { User, Mail, Calendar, Camera, Upload, Loader2, History, FileText, Settings, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { APP_VERSION } from "@/lib/constants"; // 👈 Importamos la versión
+import { toast } from "sonner"; // 👈 Importamos Sonner
+import { APP_VERSION } from "@/lib/constants";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
   
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -58,12 +58,16 @@ export default function ProfilePage() {
       const res = await fetch("/api/upload/avatar", { method: "POST", body: data });
       const result = await res.json();
       if (!res.ok) throw new Error(result.message);
+      
       setFormData({ ...formData, image: result.url });
       setFile(null); 
       router.refresh(); 
-      setMessage({ type: "success", text: "¡Foto de perfil actualizada!" });
+      
+      // 👈 Toast de éxito
+      toast.success("¡Foto de perfil actualizada!");
     } catch {
-      setMessage({ type: "error", text: "Error al subir la foto." });
+      // 👈 Toast de error
+      toast.error("Error al subir la foto.");
     } finally {
       setUploading(false);
     }
@@ -72,7 +76,6 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage({ type: "", text: "" });
     try {
       const res = await fetch("/api/user", {
         method: "PUT",
@@ -81,9 +84,12 @@ export default function ProfilePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setMessage({ type: "success", text: "Perfil actualizado correctamente" });
+      
+      // 👈 Toast de éxito
+      toast.success("Perfil actualizado correctamente");
     } catch (err: unknown) {
-      if (err instanceof Error) setMessage({ type: "error", text: err.message });
+      // 👈 Toast de error
+      if (err instanceof Error) toast.error(err.message);
     } finally {
       setSaving(false);
     }
@@ -149,11 +155,6 @@ export default function ProfilePage() {
             <input type="date" required className="w-full mt-2 bg-[#090a0e] border border-gray-700 rounded-lg p-3 text-white focus:outline-none scheme-dark" value={formData.birthDate} onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} />
           </div>
 
-          {message.text && (
-            <div className={`p-3 rounded-lg flex items-center gap-2 text-sm font-medium ${message.type === "success" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
-              {message.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />} {message.text}
-            </div>
-          )}
           <button type="submit" disabled={saving} className="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50 active:scale-95">
             {saving ? "Guardando..." : "Guardar Cambios de Datos"}
           </button>
@@ -186,7 +187,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* 👈 VERSIÓN DE LA APP */}
+        {/* VERSIÓN DE LA APP */}
         <div className="mt-8 pt-4 border-t border-gray-800/50 text-center">
           <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase">
             SETGORIA {APP_VERSION}
