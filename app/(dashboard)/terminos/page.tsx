@@ -1,7 +1,7 @@
 // app/(dashboard)/terminos/page.tsx
 export default function TerminosPage() {
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto text-white">
+    <div className="p-6 md:p-10 max-w-4xl mx-auto text-white pb-24">
       <h1 className="text-3xl font-black italic text-orange-500 uppercase mb-8">Términos y Condiciones</h1>
       
       <div className="bg-set-surface border border-gray-800 rounded-2xl p-8 space-y-6 text-sm text-gray-300 leading-relaxed">
@@ -23,6 +23,18 @@ export default function TerminosPage() {
         <section>
           <h2 className="text-lg font-bold text-white mb-2">4. Propiedad Intelectual</h2>
           <p>Todos los pronósticos, estadísticas, logotipos y el código fuente de la plataforma son propiedad exclusiva de SETGORIA. Queda prohibida su reproducción, distribución o reventa sin autorización expresa por escrito.</p>
+        </section>
+
+        {/* 👈 NUEVA SECCIÓN DE CONTACTO CON DATOS REALES */}
+        <section>
+          <h2 className="text-lg font-bold text-white mb-2">5. Contacto y Soporte</h2>
+          <p>Para cualquier duda, problema técnico o consulta relacionada con su cuenta, puede contactarnos a través de los siguientes medios oficiales:</p>
+          <ul className="list-disc list-inside mt-2 space-y-1">
+            <li>📧 Correo electrónico: <span className="text-white font-medium">leonardofonseca302@gmail.com</span></li>
+            <li>📱 WhatsApp: <span className="text-white font-medium">+53 51756491</span></li>
+            <li>🤖 Bot de Telegram: <span className="text-white font-medium">@SetgoriaSportBot</span></li>
+          </ul>
+          <p className="mt-3">Nuestro equipo de soporte responderá en un plazo máximo de 24 horas hábiles.</p>
         </section>
       </div>
     </div>
