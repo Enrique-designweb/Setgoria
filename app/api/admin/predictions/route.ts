@@ -2,7 +2,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import webpush from "@/lib/webpush";
+import { Telegraf } from "telegraf";
+
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
 export async function POST(req: Request) {
   try {
@@ -16,33 +18,23 @@ export async function POST(req: Request) {
       include: { match: true }
     });
 
+    // 👈 NOTIFICACIÓN TELEGRAM PARA PREMIUM
     if (isPremium) {
-      const subscriptions = await prisma.pushSubscription.findMany();
+      const telegramUsers = await prisma.telegramUser.findMany();
       
-      const payload = JSON.stringify({
-        title: "🔥 ¡Nuevo Pronóstico Premium!",
-        body: `${prediction.match.homeTeam} vs ${prediction.match.awayTeam}: ${type}`,
-        url: "/pronosticos"
-      });
+      const mensaje = `🔥 *¡NUEVO PRONÓSTICO PREMIUM!*\n\n🏆 *${prediction.match.league}*\n⚽ ${prediction.match.homeTeam} vs ${prediction.match.awayTeam}\n📊 ${prediction.type} (${prediction.probability}%)\n\n👉 Entra a la web para ver los detalles.`;
 
       await Promise.allSettled(
-        subscriptions.map(sub => 
-          webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            payload
-          ).catch((err: { statusCode?: number }) => { // 👈 Tipado correcto aquí
-            if (err.statusCode === 404 || err.statusCode === 410) {
-              return prisma.pushSubscription.delete({ where: { id: sub.id } });
-            }
-            console.error("Error enviando push:", err);
-          })
+        telegramUsers.map(u => 
+          bot.telegram.sendMessage(u.chatId, mensaje, { parse_mode: "Markdown" })
+             .catch(err => console.error(`Error a ${u.chatId}:`, err))
         )
       );
     }
 
     return NextResponse.json(prediction);
-  } catch (error) { // 👈 Usamos el error
+  } catch (error) {
     console.error("Error creando pronóstico:", error);
-    return NextResponse.json({ message: "Error al crear el pronóstico" }, { status: 500 });
+    return NextResponse.json({ message: "Error" }, { status: 500 });
   }
 }

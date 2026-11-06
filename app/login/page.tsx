@@ -46,7 +46,7 @@ function LoginForm() {
 
         if (res?.error) throw new Error("Código de verificación incorrecto");
 
-        router.push("/");
+        router.push("/inicio");
         router.refresh();
         return;
       }
@@ -99,7 +99,7 @@ function LoginForm() {
             redirect: false,
           });
           if (loginRes?.error) throw new Error(loginRes.error);
-          router.push("/");
+          router.push("/inicio");
           router.refresh();
           return;
         }

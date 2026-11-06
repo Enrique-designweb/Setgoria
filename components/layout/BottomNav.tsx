@@ -3,34 +3,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-// 👈 Aquí eliminamos "Users" de la importación
-import { Home, Zap, Crown, User, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react"; 
+import { Home, Zap, Crown, User, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 
-export default function BottomNav() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
+interface BottomNavProps {
+  isAdmin: boolean;
+}
 
-  // Menú para usuarios normales
+export default function BottomNav({ isAdmin }: BottomNavProps) {
+  const pathname = usePathname();
+
   const userNavItems = [
-    { name: "Inicio", href: "/", icon: Home },
+    { name: "Inicio", href: "/inicio", icon: Home }, // 👈 Cambiado a /inicio
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Stats", href: "/estadisticas", icon: TrendingUp },
     { name: "Premium", href: "/suscripcion", icon: Crown },
     { name: "Perfil", href: "/perfil", icon: User },
   ];
 
-  // Menú exclusivo para el ADMIN
   const adminNavItems = [
-    { name: "Inicio", href: "/", icon: Home },
+    { name: "Inicio", href: "/inicio", icon: Home }, // 👈 Cambiado a /inicio
     { name: "Panel", href: "/admin", icon: LayoutDashboard },
     { name: "Pagos", href: "/admin/pagos", icon: CreditCard },
     { name: "Stats", href: "/estadisticas", icon: TrendingUp },
     { name: "Perfil", href: "/perfil", icon: User },
   ];
 
-  const navItems = session?.user?.role === "ADMIN" ? adminNavItems : userNavItems;
+  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
     <nav className="flex justify-around items-center h-16 w-full px-1">

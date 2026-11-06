@@ -230,3 +230,11 @@ model PushSubscription {
   auth      String
   createdAt DateTime @default(now())
 }
+
+model TelegramUser {
+  id        String   @id @default(cuid())
+  chatId    String   @unique
+  username  String?
+  userId    String?  // Vinculado al usuario de la web (opcional)
+  createdAt DateTime @default(now())
+}

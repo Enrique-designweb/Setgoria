@@ -3,22 +3,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react";
 import { clsx } from "clsx";
 
-export default function Sidebar() {
+interface SidebarProps {
+  isAdmin: boolean;
+}
+
+export default function Sidebar({ isAdmin }: SidebarProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
 
-  const isAdmin = session?.user?.role === "ADMIN";
-
-  // Menú para usuarios normales
   const userMenuItems = [
-    { name: "Inicio", href: "/", icon: Home },
+    { name: "Inicio", href: "/inicio", icon: Home }, // 👈 Cambiado a /inicio
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Tenis", href: "/tenis", icon: Trophy },
-    { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp }, // 👈 Nuevo
+    { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp },
     { name: "Comunidad", href: "/comunidad", icon: Users },
     { name: "Pronósticos", href: "/pronosticos", icon: BarChart2 },
     { name: "Mi suscripción", href: "/suscripcion", icon: Crown },
@@ -26,13 +25,12 @@ export default function Sidebar() {
     { name: "Términos", href: "/terminos", icon: Info },
   ];
 
-  // Menú para el Administrador
   const adminMenuItems = [
-    { name: "Inicio", href: "/", icon: Home },
+    { name: "Inicio", href: "/inicio", icon: Home }, // 👈 Cambiado a /inicio
     { name: "Panel de Admin", href: "/admin", icon: LayoutDashboard },
     { name: "Pagos Pendientes", href: "/admin/pagos", icon: CreditCard },
     { name: "Gestión Usuarios", href: "/admin/usuarios", icon: Users },
-    { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp }, // 👈 Nuevo
+    { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp },
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Tenis", href: "/tenis", icon: Trophy },
     { name: "Comunidad", href: "/comunidad", icon: Users },
@@ -43,7 +41,6 @@ export default function Sidebar() {
 
   return (
     <div className="flex flex-col h-full w-full py-6 px-4">
-      {/* Logo */}
       <div className="flex items-center gap-2 mb-10 px-2">
         <div className="bg-orange-500 p-1.5 rounded-lg">
           <Zap className="text-white w-5 h-5 fill-white" />
@@ -51,7 +48,6 @@ export default function Sidebar() {
         <span className="text-xl font-black italic tracking-tighter text-white">SETGORIA</span>
       </div>
 
-      {/* Menú */}
       <nav className="flex flex-col gap-2 flex-1">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
