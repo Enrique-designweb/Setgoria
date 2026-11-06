@@ -44,9 +44,6 @@ export default function ForgotPasswordPage() {
           <p className="text-gray-400 text-sm mb-6">
             Si <strong>{email}</strong> está registrado, recibirás un enlace para restablecer tu contraseña.
           </p>
-          <p className="text-xs text-orange-500 font-bold bg-orange-500/10 p-2 rounded-lg mb-6">
-            (Para pruebas locales: mira la terminal de VS Code para copiar el enlace)
-          </p>
           <Link href="/login" className="text-gray-400 hover:text-white flex items-center justify-center gap-1 text-sm transition-colors">
             <ArrowLeft className="w-4 h-4" /> Volver al login
           </Link>
