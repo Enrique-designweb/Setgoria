@@ -3,30 +3,31 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET: Obtener los datos del usuario actual
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        birthDate: true,
+        role: true,
+        referralCode: true, // 👈 ¡IMPORTANTE AÑADIR ESTO!
+      },
+    });
+
+    return NextResponse.json(user);
+  } catch (error: unknown) {
+    console.error("Error obteniendo usuario:", error);
+    return NextResponse.json({ message: "Error del servidor" }, { status: 500 });
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      birthDate: true,
-      role: true,
-      createdAt: true,
-    }
-  });
-
-  return NextResponse.json(user);
 }
 
-// PUT: Actualizar los datos del usuario
 export async function PUT(req: Request) {
   try {
     const session = await auth();

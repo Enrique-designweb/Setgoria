@@ -120,6 +120,10 @@ model User {
   notifications Notification[]
   comments      Comment[]
   pushSubscriptions PushSubscription[]
+  referralCode String?  @unique
+  referredById String?
+  referredBy   User?    @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals    User[]   @relation("UserReferrals")
 }
 
 model AdminLog {

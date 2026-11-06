@@ -5,9 +5,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { User, Mail, Calendar, Camera, Upload, Loader2, History, FileText, Settings, LogOut } from "lucide-react";
+import { User, Mail, Calendar, Camera, Upload, Loader2, History, FileText, Settings, LogOut, Gift, Copy, Check } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { toast } from "sonner"; // 👈 Importamos Sonner
+import { toast } from "sonner";
 import { APP_VERSION } from "@/lib/constants";
 
 export default function ProfilePage() {
@@ -17,6 +17,10 @@ export default function ProfilePage() {
   
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Estados para referidos
+  const [referralCode, setReferralCode] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -39,8 +43,10 @@ export default function ProfilePage() {
             role: data.role || "USER",
             image: data.image || "",
           });
+          // 👈 Guardamos el código de referido
+          setReferralCode(data.referralCode || "");
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error cargando perfil", error);
       } finally {
         setLoading(false);
@@ -63,10 +69,8 @@ export default function ProfilePage() {
       setFile(null); 
       router.refresh(); 
       
-      // 👈 Toast de éxito
       toast.success("¡Foto de perfil actualizada!");
     } catch {
-      // 👈 Toast de error
       toast.error("Error al subir la foto.");
     } finally {
       setUploading(false);
@@ -85,14 +89,21 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       
-      // 👈 Toast de éxito
       toast.success("Perfil actualizado correctamente");
     } catch (err: unknown) {
-      // 👈 Toast de error
       if (err instanceof Error) toast.error(err.message);
     } finally {
       setSaving(false);
     }
+  };
+
+  // 👈 Función para copiar el enlace al portapapeles
+  const copyToClipboard = () => {
+    const url = `${window.location.origin}/login?ref=${referralCode}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success("¡Enlace de invitación copiado!");
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (loading) return <div className="p-10 text-center text-gray-400">Cargando perfil...</div>;
@@ -104,7 +115,7 @@ export default function ProfilePage() {
       <div className="bg-[#14161d] border border-gray-800 rounded-2xl p-5 md:p-8">
         
         {/* Cabecera del Perfil */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 mb-8 border-b border-gray-800 pb-8">
+        <div className="flex flex-col sm:flex-row items-center gap-5 mb-6 border-b border-gray-800 pb-8">
           <div className="relative group">
             <div className="w-24 h-24 bg-[#090a0e] border-2 border-gray-700 rounded-full flex items-center justify-center overflow-hidden relative">
               {formData.image ? (
@@ -139,6 +150,28 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+
+        {/* 👈 NUEVA SECCIÓN: Invita y Gana */}
+        {referralCode && (
+          <div className="mb-8 bg-linear-to-r from-orange-500/10 to-transparent border border-orange-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-500/20 p-2.5 rounded-full shrink-0">
+                <Gift className="w-6 h-6 text-orange-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-sm">Invita a un amigo</h3>
+                <p className="text-xs text-gray-400">Gana 3 días gratis por cada amigo que se registre.</p>
+              </div>
+            </div>
+            <button
+              onClick={copyToClipboard}
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-2 px-4 rounded-lg transition-all active:scale-95 w-full sm:w-auto justify-center shrink-0"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Copiado" : "Copiar Enlace"}
+            </button>
+          </div>
+        )}
 
         {/* Formulario de Datos */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">

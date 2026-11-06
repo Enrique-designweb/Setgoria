@@ -1,14 +1,18 @@
 // app/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react"; // 👈 Añadimos Suspense
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Link from "next/link"; // 👈 Añadido para el enlace
+import { useRouter, useSearchParams } from "next/navigation"; // 👈 Añadimos useSearchParams
+import Link from "next/link";
 import { Zap, Eye, EyeOff, Check, X, KeyRound, ArrowLeft } from "lucide-react";
 
-export default function LoginPage() {
+// 1. Movemos toda la lógica a un componente interno
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref"); // 👈 Atrapamos el código de la URL
+
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", password: "", birthDate: "" });
@@ -56,7 +60,10 @@ export default function LoginPage() {
         const res = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            ref: refCode, // 👈 AQUÍ ENVIAMOS EL CÓDIGO A LA API
+          }),
         });
 
         if (!res.ok) {
@@ -99,7 +106,7 @@ export default function LoginPage() {
 
         setRequires2FA(true);
       }
-    } catch (err: unknown) { // 👈 Corregido de any a unknown
+    } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError("Ocurrió un error inesperado");
     } finally {
@@ -157,6 +164,12 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm mt-2">
             {isRegister ? "Crea tu cuenta para empezar" : "Bienvenido de nuevo"}
           </p>
+          {/* 👈 Si viene con referido, le mostramos un pequeño aviso */}
+          {isRegister && refCode && (
+            <div className="mt-3 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full">
+              <span className="text-[10px] font-bold text-orange-500 uppercase">¡Invitación válida! Ganas 3 días gratis</span>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -186,7 +199,6 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {/* 👈 ENLACE DE OLVIDÉ CONTRASEÑA */}
             {!isRegister && (
               <div className="flex justify-end mt-2">
                 <Link href="/forgot-password" className="text-xs text-orange-500 hover:underline font-bold">
@@ -240,5 +252,18 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 2. Exportamos el componente envuelto en Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-set-bg">
+        <div className="text-orange-500 font-bold animate-pulse">Cargando...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
