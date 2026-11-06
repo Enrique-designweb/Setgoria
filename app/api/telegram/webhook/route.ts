@@ -1,6 +1,7 @@
 // app/api/telegram/webhook/route.ts
 import { NextResponse } from "next/server";
 import { Telegraf, Markup } from "telegraf";
+import { InlineKeyboardButton } from "telegraf/types"; // 👈 Importación necesaria para el tipado estricto
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
@@ -19,7 +20,7 @@ bot.start(async (ctx) => {
     });
 
     return ctx.reply(
-      `¡Bienvenido a *SETGORIA Sport*, ${username}! ⚽🎾\n\nSoy tu asistente. ¿Qué quieres hacer hoy?`,
+      `¡Bienvenido a *SETGORIA Sport*, ${username}! ⚽🎾\n\nPara comenzar, asegúrate de tener una cuenta en setgoria.vercel.app. Luego, escribe tu correo electrónico aquí para vincular tu cuenta.`,
       {
         parse_mode: "Markdown",
         ...Markup.keyboard([
@@ -35,7 +36,86 @@ bot.start(async (ctx) => {
   }
 });
 
-// --- COMANDO /partidos ---
+// --- COMANDO /login (OTP Seguro con Botón de Copiar) ---
+bot.hears("🔐 Login Web", async (ctx) => {
+  const chatId = ctx.chat.id.toString();
+  
+  try {
+    const telUser = await prisma.telegramUser.findUnique({ where: { chatId } });
+    
+    if (!telUser || !telUser.userId) {
+      return ctx.reply("⚠️ Primero debes vincular tu correo. Escribe tu correo electrónico a continuación (ej: tu@correo.com):");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: telUser.userId } });
+    if (!user || !user.email) return ctx.reply("❌ Error: No se encontró tu usuario en la base de datos.");
+
+    // Generamos OTP de 6 dígitos
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(otpCode).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Expira en 10 mins
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { 
+        twoFactorCode: hashedOtp, 
+        twoFactorExpiresAt: expiresAt 
+      }
+    });
+
+    // 👈 SOLUCIÓN ESTRICTA: Sin 'any'. Usamos 'unknown' y lo casteamos al tipo oficial de Telegraf
+    const botonCopiar = {
+      text: "📋 Copiar Código de Acceso",
+      copy_text: { text: otpCode }
+    } as unknown as InlineKeyboardButton;
+
+    return ctx.reply(
+      `🔐 *Código de Acceso Generado*\n\nHaz clic en el botón de abajo para copiar tu código de 6 dígitos. Luego, pégalo en la web para iniciar sesión.\n\n⏳ _Este código expira en 10 minutos._`,
+      {
+        parse_mode: "Markdown",
+        ...Markup.inlineKeyboard([[botonCopiar]])
+      }
+    );
+  } catch (error) {
+    console.error("Error generando OTP:", error);
+    return ctx.reply("Hubo un error al generar tu código.");
+  }
+});
+
+// --- MANEJO DE TEXTO (Vincular Correo) ---
+bot.on("text", async (ctx) => {
+  const text = ctx.message.text;
+  const chatId = ctx.chat.id.toString();
+  
+  // Si el texto parece un correo, lo buscamos en la BD
+  if (text.includes("@") && text.includes(".")) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: text.toLowerCase().trim() },
+      });
+
+      if (!user) {
+        return ctx.reply("❌ No encontré ninguna cuenta en SETGORIA con ese correo. Asegúrate de estar registrado en la web primero.");
+      }
+
+      // Vinculamos el chatId de Telegram con el usuario de la web
+      await prisma.telegramUser.update({
+        where: { chatId },
+        data: { userId: user.id }
+      });
+
+      return ctx.reply(
+        `✅ ¡Cuenta vinculada con éxito! Hola, *${user.name || 'Usuario'}*.\n\nYa puedes usar el botón *🔐 Login Web* para obtener tu código de acceso rápido.`, 
+        { parse_mode: "Markdown" }
+      );
+    } catch (error) {
+      console.error("Error vinculando correo:", error);
+      return ctx.reply("Error al buscar tu cuenta. Intenta más tarde.");
+    }
+  }
+});
+
+// --- COMANDO ⚽ Partidos ---
 bot.hears("⚽ Partidos", async (ctx) => {
   try {
     const partidos = await prisma.match.findMany({
@@ -63,7 +143,7 @@ bot.hears("⚽ Partidos", async (ctx) => {
   }
 });
 
-// --- COMANDO /pronosticos ---
+// --- COMANDO 📊 Pronósticos ---
 bot.hears("📊 Pronósticos", async (ctx) => {
   try {
     const partidos = await prisma.match.findMany({
@@ -94,7 +174,7 @@ bot.hears("📊 Pronósticos", async (ctx) => {
   }
 });
 
-// --- COMANDO /premium ---
+// --- COMANDO 👑 Premium ---
 bot.hears("👑 Premium", async (ctx) => {
   return ctx.reply(
     "👑 *SUSCRIPCIÓN PREMIUM*\n\nDesbloquea todos los pronósticos y estadísticas en vivo.",
@@ -109,7 +189,7 @@ bot.hears("👑 Premium", async (ctx) => {
   );
 });
 
-// --- COMANDO /pagos ---
+// --- COMANDO 💳 Pagos ---
 bot.hears("💳 Pagos", async (ctx) => {
   return ctx.reply(
     "💳 *MÉTODOS DE PAGO*\n\n1️⃣ *QvaPay* (Automático)\n2️⃣ *Transfermóvil* (Manual)\n3️⃣ *USDT* (Cripto)\n\nElige tu método:",
@@ -124,71 +204,12 @@ bot.hears("💳 Pagos", async (ctx) => {
   );
 });
 
-// --- COMANDO /login (OTP para la Web) ---
-bot.hears("🔐 Login Web", async (ctx) => {
-  const chatId = ctx.chat.id.toString();
-  
-  try {
-    const telUser = await prisma.telegramUser.findUnique({ where: { chatId } });
-    
-    if (!telUser || !telUser.userId) {
-      return ctx.reply("⚠️ Primero debes vincular tu correo. Escribe tu correo electrónico a continuación:");
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: telUser.userId } });
-    if (!user || !user.email) return ctx.reply("Error: No se encontró tu usuario.");
-
-    // Generamos OTP de 6 dígitos
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedOtp = crypto.createHash('sha256').update(otpCode).digest('hex');
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { twoFactorCode: hashedOtp, twoFactorExpiresAt: expiresAt }
-    });
-
-    return ctx.reply(`🔐 *Tu código de acceso es:* \`${otpCode}\`\n\nEste código expira en 10 minutos. Úsalo en la web para iniciar sesión.`, { parse_mode: "Markdown" });
-  } catch (error) {
-    console.error("Error generando OTP:", error);
-    return ctx.reply("Error al generar el código de acceso.");
-  }
-});
-
-// --- COMANDO /soporte ---
+// --- COMANDO 🆘 Soporte ---
 bot.hears("🆘 Soporte", async (ctx) => {
   return ctx.reply(
-    "🆘 *SOPORTE TÉCNICO SETGORIA*\n\n¿Tienes problemas con tu cuenta o pagos?\n\n📧 Email: leonardofonseca302@gmail.com\n💬 WhatsApp: +53 51756491\n\nTe responderemos lo antes posible.",
+    "🆘 *SOPORTE TÉCNICO SETGORIA*\n\n¿Tienes problemas con tu cuenta o pagos?\n\n📧 Email: hernanglez06@gmail.com\n💬 WhatsApp: +53 51756491\n\nTe responderemos lo antes posible.",
     { parse_mode: "Markdown" }
   );
-});
-
-// --- MANEJO DE TEXTO (Vincular Correo) ---
-bot.on("text", async (ctx) => {
-  const text = ctx.message.text;
-  const chatId = ctx.chat.id.toString();
-  
-  // Si el texto es un correo, buscamos al usuario y vinculamos
-  if (text.includes("@") && text.includes(".")) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { email: text.toLowerCase().trim() },
-      });
-
-      if (!user) return ctx.reply("❌ No encontré ninguna cuenta con ese correo.");
-
-      // Vinculamos el TelegramUser con el User
-      await prisma.telegramUser.update({
-        where: { chatId },
-        data: { userId: user.id }
-      });
-
-      return ctx.reply(`✅ ¡Cuenta vinculada con éxito! Ahora eres *${user.name || 'Usuario'}*.\n\nYa puedes usar el botón de *🔐 Login Web* para obtener tu código de acceso.`, { parse_mode: "Markdown" });
-    } catch (error) {
-      console.error("Error vinculando correo:", error);
-      return ctx.reply("Error al buscar tu cuenta. Intenta más tarde.");
-    }
-  }
 });
 
 // --- WEBHOOK HANDLER ---
