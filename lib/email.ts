@@ -1,23 +1,18 @@
 // lib/email.ts
 import { BrevoClient } from '@getbrevo/brevo';
 
-// Inicializamos el cliente de Brevo con la clave desde las variables de entorno
 const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
 
-// Definimos el remitente (debe ser el correo con el que te registraste en Brevo)
-const SENDER_EMAIL = 'hernanglez06@gmail.com'; // 👈 CÁMBIALO POR TU CORREO
+// 👈 Remitente Oficial (Debe coincidir con tu registro en Brevo)
+const SENDER_EMAIL = 'hernanglez06@gmail.com'; 
 const SENDER_NAME = 'SETGORIA';
 
-// 📧 Correo para Pagos (Eliminamos el parámetro 'plan' que no se usaba)
+// 📧 Correo para Pagos (Código OTP)
 export async function sendVerificationEmail(email: string, code: string) {
-  console.log(`\n=========================================`);
-  console.log(`📧 [PAGO] Código OTP para ${email}: ${code}`);
-  console.log(`=========================================\n`);
-
   try {
     await brevo.transactionalEmails.sendTransacEmail({
       sender: { name: SENDER_NAME, email: SENDER_EMAIL },
-      to: [{ email }],
+      to: [{ email: email }],
       subject: 'Tu Código de Verificación - SETGORIA',
       htmlContent: `
         <div style="font-family: sans-serif; background-color: #090a0e; color: #ffffff; padding: 40px; text-align: center; border-radius: 10px;">
@@ -40,10 +35,6 @@ export async function sendVerificationEmail(email: string, code: string) {
 
 // 🔐 Correo para Login 2FA
 export async function sendLoginOTPEmail(email: string, code: string) {
-  console.log(`\n=========================================`);
-  console.log(`🔐 [LOGIN 2FA] Código OTP para ${email}: ${code}`);
-  console.log(`=========================================\n`);
-
   try {
     await brevo.transactionalEmails.sendTransacEmail({
       sender: { name: SENDER_NAME, email: SENDER_EMAIL },
@@ -70,10 +61,6 @@ export async function sendLoginOTPEmail(email: string, code: string) {
 
 // 🔑 Correo para Recuperación de Contraseña
 export async function sendPasswordResetEmail(email: string, resetUrl: string) {
-  console.log(`\n=========================================`);
-  console.log(`🔑 [RECUPERACIÓN] Enlace para ${email}: ${resetUrl}`);
-  console.log(`=========================================\n`);
-
   try {
     await brevo.transactionalEmails.sendTransacEmail({
       sender: { name: SENDER_NAME, email: SENDER_EMAIL },

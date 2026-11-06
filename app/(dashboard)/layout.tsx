@@ -1,7 +1,8 @@
+// app/(dashboard)/layout.tsx
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Sidebar from "@/components/layout/Sidebar"; 
+import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import BottomNav from "@/components/layout/BottomNav";
 import Footer from "@/components/layout/Footer";
@@ -13,10 +14,17 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  
+  if (!session?.user) {
+    redirect("/login");
+  }
 
   const activeSub = await prisma.subscription.findFirst({
-    where: { userId: session.user.id, status: "ACTIVE", expiresAt: { gt: new Date() } },
+    where: {
+      userId: session.user.id,
+      status: "ACTIVE",
+      expiresAt: { gt: new Date() },
+    },
   });
 
   const hasActiveSubscription = !!activeSub;
@@ -27,15 +35,20 @@ export default async function DashboardLayout({
   });
 
   const isAdmin = user?.role === "ADMIN";
+  
   const now = new Date().getTime(); 
   const trialExpiresAt = user ? new Date(user.createdAt).getTime() + 72 * 60 * 60 * 1000 : 0;
   const isTrialExpired = now > trialExpiresAt;
+
   const shouldBlock = !isAdmin && isTrialExpired && !hasActiveSubscription;
 
   return (
     <div className="flex min-h-screen bg-set-bg text-white">
-      {/* 👈 Pasamos isAdmin */}
-      <Sidebar isAdmin={isAdmin} />
+      {/* Sidebar oculto en móvil, visible en pantallas medianas o grandes */}
+      <div className="hidden md:flex w-64 border-r border-gray-800">
+        <Sidebar isAdmin={isAdmin} />
+      </div>
+      
       <div className="flex-1 flex flex-col min-h-screen">
         <TopBar />
         <main className="flex-1 overflow-x-hidden pb-20 md:pb-0 flex flex-col">
@@ -48,7 +61,6 @@ export default async function DashboardLayout({
             <Footer />
           </div>
         </main>
-        {/* 👈 Pasamos isAdmin */}
         <BottomNav isAdmin={isAdmin} />
       </div>
     </div>

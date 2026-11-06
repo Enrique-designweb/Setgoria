@@ -24,9 +24,8 @@ export default function ForgotPasswordPage() {
       });
 
       if (!res.ok) throw new Error("Error al procesar la solicitud");
-
       setSuccess(true);
-    } catch { // 👈 Corregido: Sin paréntesis ni variable
+    } catch {
       setError("Hubo un error. Intenta de nuevo.");
     } finally {
       setLoading(false);
