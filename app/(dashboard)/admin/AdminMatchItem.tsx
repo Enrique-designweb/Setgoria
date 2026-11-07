@@ -161,7 +161,7 @@ export default function AdminMatchItem({ match }: { match: MatchWithPredictions 
           <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-2">Resultados</p>
           <div className="flex flex-col gap-1.5">
             {match.predictions.map((pred) => (
-              <div key={pred.id} className="flex items-center justify-between bg-[#090a0e] border border-gray-800/50 p-2 rounded-lg gap-2">
+              <div key={pred.id} className="flex items-center justify-between bg-set-bg border border-gray-800/50 p-2 rounded-lg gap-2">
                 <div className="flex flex-col flex-1 min-w-0">
                   <span className="text-xs text-white font-medium truncate flex items-center gap-1">
                     {pred.type} {pred.isPremium && <span className="text-orange-500 text-[10px]">👑</span>}
@@ -187,11 +187,11 @@ export default function AdminMatchItem({ match }: { match: MatchWithPredictions 
             <h4 className="text-xs font-bold text-blue-400">Editando Partido</h4>
             <button type="button" onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-white"><X className="w-3.5 h-3.5" /></button>
           </div>
-          <div><label className="text-[9px] font-bold text-gray-500 uppercase">Liga</label><input type="text" required value={editData.league} onChange={(e) => setEditData({ ...editData, league: e.target.value })} className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none" /></div>
-          <div><label className="text-[9px] font-bold text-gray-500 uppercase">Fecha y Hora</label><input type="datetime-local" required value={editData.matchDate} onChange={(e) => setEditData({ ...editData, matchDate: e.target.value })} className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none scheme-dark" /></div>
+          <div><label className="text-[9px] font-bold text-gray-500 uppercase">Liga</label><input type="text" required value={editData.league} onChange={(e) => setEditData({ ...editData, league: e.target.value })} className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none" /></div>
+          <div><label className="text-[9px] font-bold text-gray-500 uppercase">Fecha y Hora</label><input type="datetime-local" required value={editData.matchDate} onChange={(e) => setEditData({ ...editData, matchDate: e.target.value })} className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none scheme-dark" /></div>
           <div className="grid grid-cols-2 gap-2">
-            <div><label className="text-[9px] font-bold text-gray-500 uppercase">Local</label><input type="text" required value={editData.homeTeam} onChange={(e) => setEditData({ ...editData, homeTeam: e.target.value })} className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none" /></div>
-            <div><label className="text-[9px] font-bold text-gray-500 uppercase">Visitante</label><input type="text" required value={editData.awayTeam} onChange={(e) => setEditData({ ...editData, awayTeam: e.target.value })} className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none" /></div>
+            <div><label className="text-[9px] font-bold text-gray-500 uppercase">Local</label><input type="text" required value={editData.homeTeam} onChange={(e) => setEditData({ ...editData, homeTeam: e.target.value })} className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none" /></div>
+            <div><label className="text-[9px] font-bold text-gray-500 uppercase">Visitante</label><input type="text" required value={editData.awayTeam} onChange={(e) => setEditData({ ...editData, awayTeam: e.target.value })} className="w-full mt-1 bg-set-bgrder border-gray-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 outline-none" /></div>
           </div>
           <button type="submit" disabled={loading} className="mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg text-xs transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
             <Save className="w-3.5 h-3.5" /> {loading ? "Guardando..." : "Guardar"}
@@ -201,9 +201,9 @@ export default function AdminMatchItem({ match }: { match: MatchWithPredictions 
 
       {isOpen && (
         <form onSubmit={handleAddPrediction} className="mt-2 pt-4 border-t border-gray-800 grid grid-cols-1 gap-2.5 bg-black/20 p-3 rounded-lg">
-          <div><label className="text-[9px] font-bold text-gray-500 uppercase">Pronóstico</label><input type="text" required placeholder="Ej. Más de 8.5 córners" className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-orange-500 outline-none" value={predData.type} onChange={(e) => setPredData({ ...predData, type: e.target.value })} /></div>
+          <div><label className="text-[9px] font-bold text-gray-500 uppercase">Pronóstico</label><input type="text" required placeholder="Ej. Más de 8.5 córners" className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-orange-500 outline-none" value={predData.type} onChange={(e) => setPredData({ ...predData, type: e.target.value })} /></div>
           <div className="flex gap-3">
-            <div className="flex-1"><label className="text-[9px] font-bold text-gray-500 uppercase">Prob. (%)</label><input type="number" min="1" max="100" required className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-orange-500 outline-none" value={predData.probability} onChange={(e) => setPredData({ ...predData, probability: Number(e.target.value) })} /></div>
+            <div className="flex-1"><label className="text-[9px] font-bold text-gray-500 uppercase">Prob. (%)</label><input type="number" min="1" max="100" required className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-xs text-white focus:border-orange-500 outline-none" value={predData.probability} onChange={(e) => setPredData({ ...predData, probability: Number(e.target.value) })} /></div>
             <div className="flex items-center gap-1.5 pt-4">
               <input type="checkbox" id={`premium-${match.id}`} className="w-3.5 h-3.5 accent-orange-500 rounded border-gray-700" checked={predData.isPremium} onChange={(e) => setPredData({ ...predData, isPremium: e.target.checked })} />
               <label htmlFor={`premium-${match.id}`} className="text-[10px] text-gray-300 font-medium cursor-pointer">Premium</label>

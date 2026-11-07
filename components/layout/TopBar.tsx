@@ -12,7 +12,7 @@ export default function TopBar() {
   const isAdmin = session?.user?.role === "ADMIN";
 
   return (
-    <header className="h-16 border-b border-gray-800 flex items-center justify-between px-4 md:px-6 bg-[#090a0e]/80 backdrop-blur-md sticky top-0 z-40">
+    <header className="h-16 border-b border-gray-800 flex items-center justify-between px-4 md:px-6 bg-set-bg/80 backdrop-blur-md sticky top-0 z-40">
       
       {/* Logo en móvil */}
       <div className="md:hidden flex items-center gap-2">

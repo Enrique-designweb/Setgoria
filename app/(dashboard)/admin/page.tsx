@@ -37,15 +37,15 @@ export default async function AdminPage() {
 
       {/* 👈 Accesos Rápidos para Móvil */}
       <div className="grid grid-cols-2 md:hidden gap-3 mb-8">
-        <Link href="/admin/pagos" className="bg-[#14161d] border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
+        <Link href="/admin/pagos" className="bg-set-surface border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
           <CreditCard className="w-6 h-6 text-orange-500" />
           <span className="text-xs font-bold">Gestionar Pagos</span>
         </Link>
-        <Link href="/admin/usuarios" className="bg-[#14161d] border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
+        <Link href="/admin/usuarios" className="bg-set-surface border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
           <Users className="w-6 h-6 text-orange-500" />
           <span className="text-xs font-bold">Ver Usuarios</span>
         </Link>
-        <Link href="/configuracion" className="bg-[#14161d] border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 col-span-2">
+        <Link href="/configuracion" className="bg-set-surface border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 col-span-2">
           <Settings className="w-6 h-6 text-orange-500" />
           <span className="text-xs font-bold">Configuración Global</span>
         </Link>
@@ -53,10 +53,10 @@ export default async function AdminPage() {
 
       {/* Botones para PC (Desktop) */}
       <div className="hidden md:flex items-center gap-2 mb-8">
-        <Link href="/admin/usuarios" className="bg-[#14161d] hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+        <Link href="/admin/usuarios" className="bg-set-surface hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
           <Users className="w-4 h-4 text-orange-500" /> Usuarios
         </Link>
-        <Link href="/admin/pagos" className="bg-[#14161d] hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+        <Link href="/admin/pagos" className="bg-set-surface hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
           <CreditCard className="w-4 h-4 text-orange-500" /> Gestionar Pagos
         </Link>
       </div>
@@ -66,7 +66,7 @@ export default async function AdminPage() {
         
         {/* Formulario */}
         <div className="w-full md:w-1/3">
-          <div className="bg-[#14161d] border border-gray-800 rounded-2xl p-5 md:p-6 md:sticky md:top-6">
+          <div className="bg-set-surface border border-gray-800 rounded-2xl p-5 md:p-6 md:sticky md:top-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Plus className="w-5 h-5 text-orange-500" /> Nuevo Partido
             </h2>
@@ -76,7 +76,7 @@ export default async function AdminPage() {
 
         {/* Lista de Partidos */}
         <div className="w-full md:w-2/3">
-          <div className="bg-[#14161d] border border-gray-800 rounded-2xl p-5 md:p-6">
+          <div className="bg-set-surface border border-gray-800 rounded-2xl p-5 md:p-6">
             <h2 className="text-lg font-bold text-white mb-4">Partidos en la Plataforma</h2>
             
             {matches.length === 0 ? (

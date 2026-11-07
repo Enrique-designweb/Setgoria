@@ -76,11 +76,11 @@ model Match {
   matchDate   DateTime
   sport       Sport        @default(FUTBOL)
   
-  // 👈 NUEVOS CAMPOS PARA LIVE SCORES
   homeScore   Int?
   awayScore   Int?
   status      MatchStatus  @default(NS)
   elapsed     Int?
+  videoUrl    String?
 
   predictions Prediction[]
 

@@ -26,12 +26,12 @@ export default async function EstadisticasPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-[#14161d] border border-gray-800 p-6 rounded-2xl flex flex-col items-center text-center">
+        <div className="bg-set-surface border border-gray-800 p-6 rounded-2xl flex flex-col items-center text-center">
           <Target className="w-8 h-8 text-blue-400 mb-2" />
           <span className="text-3xl font-black">{total}</span>
           <span className="text-xs text-gray-400 uppercase font-bold mt-1">Pronósticos Cerrados</span>
         </div>
-        <div className="bg-[#14161d] border border-gray-800 p-6 rounded-2xl flex flex-col items-center text-center">
+        <div className="bg-set-surface border border-gray-800 p-6 rounded-2xl flex flex-col items-center text-center">
           <ShieldCheck className="w-8 h-8 text-green-400 mb-2" />
           <span className="text-3xl font-black text-green-400">{won}</span>
           <span className="text-xs text-gray-400 uppercase font-bold mt-1">Acertados</span>
@@ -46,7 +46,7 @@ export default async function EstadisticasPage() {
       <h2 className="text-lg font-bold mb-4">Últimos Resultados</h2>
       <div className="flex flex-col gap-3">
         {predictions.map((pred) => (
-          <div key={pred.id} className="bg-[#14161d] border border-gray-800 p-4 rounded-xl flex justify-between items-center">
+          <div key={pred.id} className="bg-set-surface border border-gray-800 p-4 rounded-xl flex justify-between items-center">
             <div>
               <p className="text-xs text-gray-400 font-bold uppercase">{pred.match.league}</p>
               <p className="text-sm font-bold mt-1">{pred.match.homeTeam} vs {pred.match.awayTeam}</p>

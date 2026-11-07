@@ -43,16 +43,18 @@ export default async function DashboardLayout({
   const shouldBlock = !isAdmin && isTrialExpired && !hasActiveSubscription;
 
   return (
-    <div className="flex min-h-screen bg-set-bg text-white">
+    <div className="flex min-h-screen bg-set-bg text-white w-full overflow-hidden">
       {/* Sidebar oculto en móvil, visible en pantallas medianas o grandes */}
-      <div className="hidden md:flex w-64 border-r border-gray-800">
+      <div className="hidden md:flex w-64 shrink-0 border-r border-gray-800">
         <Sidebar isAdmin={isAdmin} />
       </div>
       
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* 👇 w-full min-w-0 para que el contenido no empuje la pantalla */}
+      <div className="flex-1 flex flex-col min-h-screen w-full min-w-0">
         <TopBar />
-        <main className="flex-1 overflow-x-hidden pb-20 md:pb-0 flex flex-col">
-          <div className="flex-1">
+        
+        <main className="flex-1 w-full min-w-0 pb-24 md:pb-0 flex flex-col overflow-x-hidden">
+          <div className="flex-1 w-full min-w-0">
             <SubscriptionGate isExpired={shouldBlock}>
               {children}
             </SubscriptionGate>
@@ -61,6 +63,7 @@ export default async function DashboardLayout({
             <Footer />
           </div>
         </main>
+        
         <BottomNav isAdmin={isAdmin} />
       </div>
     </div>

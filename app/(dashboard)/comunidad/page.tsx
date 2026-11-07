@@ -70,9 +70,9 @@ export default function ComunidadPage() {
           <h2 className="text-xl font-bold mb-4">Discusiones Recientes</h2>
           
           {session?.user ? (
-            <form onSubmit={handleSubmit} className="bg-[#14161d] border border-gray-800 p-4 rounded-2xl flex flex-col gap-3">
+            <form onSubmit={handleSubmit} className="bg-set-surface border border-gray-800 p-4 rounded-2xl flex flex-col gap-3">
               <textarea
-                className="w-full bg-[#090a0e] border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-orange-500 resize-none"
+                className="w-full bg-set-bg border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-orange-500 resize-none"
                 placeholder="¿Qué opinas de los pronósticos de hoy? (Máx. 200 caracteres)"
                 maxLength={200}
                 rows={2}
@@ -87,7 +87,7 @@ export default function ComunidadPage() {
               </div>
             </form>
           ) : (
-            <p className="text-gray-400 text-sm bg-[#14161d] p-4 rounded-xl border border-gray-800">
+            <p className="text-gray-400 text-sm bg-set-surface p-4 rounded-xl border border-gray-800">
               Inicia sesión para participar en la comunidad.
             </p>
           )}
@@ -95,12 +95,12 @@ export default function ComunidadPage() {
           {loading ? (
             <p className="text-gray-400">Cargando comentarios...</p>
           ) : comments.length === 0 ? (
-            <p className="text-gray-500 text-sm bg-[#14161d] p-4 rounded-xl border border-gray-800 text-center">
+            <p className="text-gray-500 text-sm bg-set-surface p-4 rounded-xl border border-gray-800 text-center">
               Aún no hay comentarios. ¡Sé el primero en participar!
             </p>
           ) : (
             comments.map((comment) => (
-              <div key={comment.id} className="bg-[#14161d] border border-gray-800 p-5 rounded-2xl">
+              <div key={comment.id} className="bg-set-surface border border-gray-800 p-5 rounded-2xl">
                 <div className="flex items-center gap-3 mb-3">
                   {comment.user.image ? (
                     <Image src={comment.user.image} alt="Avatar" width={32} height={32} className="rounded-full object-cover" />
@@ -122,7 +122,7 @@ export default function ComunidadPage() {
 
         {/* Ranking Lateral (Mock) */}
         <div className="space-y-4">
-          <div className="bg-[#14161d] border border-gray-800 p-6 rounded-2xl">
+          <div className="bg-set-surface border border-gray-800 p-6 rounded-2xl">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
               <Medal className="w-5 h-5 text-yellow-500" /> Top Predictores
             </h2>

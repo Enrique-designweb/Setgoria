@@ -28,7 +28,7 @@ export default function StoriesBar() {
               className="flex flex-col items-center gap-2 shrink-0 group"
             >
               <div className="w-16 h-16 md:w-20 md:h-20 rounded-full p-0.5 bg-linear-to-tr from-orange-500 to-yellow-500 group-hover:scale-105 transition-transform">
-                <div className="w-full h-full rounded-full border-2 border-[#090a0e] overflow-hidden relative">
+                <div className="w-full h-full rounded-full border-2 border-set-bg overflow-hidden relative">
                   {/* 👈 Usamos Image en lugar de img */}
                   <Image 
                     src={story.image} 

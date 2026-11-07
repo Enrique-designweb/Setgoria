@@ -50,27 +50,27 @@ export default function AdminMatchForm() {
       <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase">Liga</label>
         <input type="text" required value={formData.league} onChange={(e) => setFormData({...formData, league: e.target.value})}
-          className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none" placeholder="Ej. Champions League" />
+          className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none" placeholder="Ej. Champions League" />
       </div>
       <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase">Fecha y Hora</label>
         <input type="datetime-local" required value={formData.matchDate} onChange={(e) => setFormData({...formData, matchDate: e.target.value})}
-          className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none scheme-dark" />
+          className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none scheme-dark" />
       </div>
       <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase">Equipo Local</label>
         <input type="text" required value={formData.homeTeam} onChange={(e) => setFormData({...formData, homeTeam: e.target.value})}
-          className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none" placeholder="Ej. Real Madrid" />
+          className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none" placeholder="Ej. Real Madrid" />
       </div>
       <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase">Equipo Visitante</label>
         <input type="text" required value={formData.awayTeam} onChange={(e) => setFormData({...formData, awayTeam: e.target.value})}
-          className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none" placeholder="Ej. Barcelona" />
+          className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none" placeholder="Ej. Barcelona" />
       </div>
       <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase">Deporte</label>
         <select value={formData.sport} onChange={(e) => setFormData({...formData, sport: e.target.value})}
-          className="w-full mt-1 bg-[#090a0e] border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none">
+          className="w-full mt-1 bg-set-bg border border-gray-700 rounded-lg p-2 text-sm text-white focus:border-orange-500 outline-none">
           <option value="FUTBOL">Fútbol</option>
           <option value="TENIS">Tenis</option>
           <option value="BASQUETBOL">Básquetbol</option>

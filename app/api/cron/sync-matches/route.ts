@@ -1,3 +1,4 @@
+// app/api/cron/sync-matches/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getFootballMatches } from "@/lib/football-api";
@@ -10,6 +11,7 @@ export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   const expectedSecret = process.env.CRON_SECRET;
 
+  // Seguridad para Vercel Cron
   if (process.env.NODE_ENV === "production" && expectedSecret) {
     if (authHeader !== `Bearer ${expectedSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -29,10 +31,11 @@ export async function GET(req: Request) {
           awayTeam: m.awayTeam,
           matchDate: new Date(m.matchDate),
           sport: Sport.FUTBOL,
-          status: m.status as MatchStatus, // 👈 Nuevo
-          homeScore: m.homeScore,          // 👈 Nuevo
-          awayScore: m.awayScore,          // 👈 Nuevo
-          elapsed: m.elapsed,              // 👈 Nuevo
+          status: m.status as MatchStatus,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+          elapsed: m.elapsed,
+          // 👇 IMPORTANTE: No actualizamos 'videoUrl' en el update para no borrar el video que pongas manualmente
         },
         create: {
           id: m.id,
@@ -45,6 +48,7 @@ export async function GET(req: Request) {
           homeScore: m.homeScore,
           awayScore: m.awayScore,
           elapsed: m.elapsed,
+          videoUrl: m.videoUrl || null, // Solo se guarda si viene en el create
         },
       });
       upserted++;

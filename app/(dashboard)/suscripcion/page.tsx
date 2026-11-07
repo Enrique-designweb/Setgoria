@@ -288,7 +288,7 @@ export default function SubscriptionPage() {
                       <input
                         type="text"
                         placeholder="Pega aquí el hash de tu transacción"
-                        className="w-full bg-[#090a0e] border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-orange-500"
+                        className="w-full bg-set-bg border border-gray-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-orange-500"
                         value={usdtTxHash}
                         onChange={(e) => setUsdtTxHash(e.target.value)}
                       />
@@ -317,7 +317,7 @@ export default function SubscriptionPage() {
               {transactionId && (paymentMethod === "TRANSFERMOVIL" || paymentMethod === "CARD") && (
                 <div className="flex flex-col gap-6 bg-orange-500/5 border border-orange-500/20 p-6 rounded-2xl animate-in fade-in zoom-in-95">
                   
-                  <div className="text-center bg-[#090a0e] p-5 rounded-xl border border-gray-800 relative">
+                  <div className="text-center bg-set-bg p-5 rounded-xl border border-gray-800 relative">
                     <p className="text-xs text-gray-400 font-bold uppercase mb-2">Tu Código de Verificación</p>
                     <p className="text-3xl font-black text-orange-500 tracking-widest font-mono select-all">
                       {paymentCode}
@@ -340,7 +340,7 @@ export default function SubscriptionPage() {
                       value={referenceNumber}
                       onChange={(e) => setReferenceNumber(e.target.value)}
                       placeholder="Ej. BR601FJVAX997"
-                      className="w-full bg-[#090a0e] border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-orange-500"
+                      className="w-full bg-set-bg border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-orange-500"
                     />
                   </div>
                   
@@ -351,7 +351,7 @@ export default function SubscriptionPage() {
                       value={enteredCode}
                       onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
                       placeholder="SETG-XXXX-XXXX"
-                      className="w-full bg-[#090a0e] border border-gray-700 rounded-lg p-3 text-white font-mono focus:outline-none focus:border-orange-500 tracking-widest"
+                      className="w-full bg-set-bg border border-gray-700 rounded-lg p-3 text-white font-mono focus:outline-none focus:border-orange-500 tracking-widest"
                     />
                   </div>
 

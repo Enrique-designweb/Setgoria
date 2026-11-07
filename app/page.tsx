@@ -13,7 +13,7 @@ export default async function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#090a0e] text-white overflow-hidden">
+    <main className="min-h-screen bg-set-bg text-white overflow-hidden">
       {/* Navbar Público */}
       <nav className="fixed top-0 w-full p-4 flex justify-between items-center bg-black/50 backdrop-blur-md z-50 border-b border-gray-800">
         <div className="flex items-center gap-2">
@@ -49,11 +49,11 @@ export default async function LandingPage() {
 
       {/* Preview Bloqueado (Mockup) */}
       <section className="px-4 max-w-5xl mx-auto pb-20 relative">
-        <div className="absolute inset-0 bg-linear-to-t from-[#090a0e] via-[#090a0e]/80 to-transparent z-10 h-full w-full"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-set-bg via-set-bg/80 to-transparent z-10 h-full w-full"></div>
         
         <div className="flex flex-col gap-4 opacity-30 blur-[6px] pointer-events-none select-none">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-[#14161d] border border-gray-800 rounded-2xl p-6">
+            <div key={i} className="bg-set-surface border border-gray-800 rounded-2xl p-6">
               <div className="flex justify-between text-xs text-gray-500 mb-4">
                 <span>CHAMPIONS LEAGUE</span>
                 <span>HOY, 20:00</span>
@@ -71,7 +71,7 @@ export default async function LandingPage() {
 
         {/* Overlay Central de Bloqueo */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-          <div className="bg-[#14161d] border border-orange-500/30 p-6 rounded-2xl text-center max-w-sm shadow-2xl">
+          <div className="bg-set-surface border border-orange-500/30 p-6 rounded-2xl text-center max-w-sm shadow-2xl">
             <div className="bg-orange-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="w-8 h-8 text-orange-500" />
             </div>
@@ -85,7 +85,7 @@ export default async function LandingPage() {
       </section>
 
       {/* Beneficios */}
-      <section className="px-4 max-w-4xl mx-auto py-16 border-t border-gray-800 relative z-10 bg-[#090a0e]">
+      <section className="px-4 max-w-4xl mx-auto py-16 border-t border-gray-800 relative z-10 bg-set-bg">
         <div className="grid md:grid-cols-3 gap-8">
           <div className="text-center">
             <div className="bg-orange-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
