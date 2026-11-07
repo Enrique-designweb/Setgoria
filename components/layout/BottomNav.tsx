@@ -1,39 +1,22 @@
-// components/layout/BottomNav.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Zap, Crown, User, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react";
+import { Home, Zap, TrendingUp, User, Trophy } from "lucide-react";
 import { clsx } from "clsx";
 
-interface BottomNavProps {
-  isAdmin: boolean;
-}
-
-export default function BottomNav({ isAdmin }: BottomNavProps) {
+export default function BottomNav() {
   const pathname = usePathname();
 
-  const userNavItems = [
+  const navItems = [
     { name: "Inicio", href: "/inicio", icon: Home },
     { name: "Fútbol", href: "/futbol", icon: Zap },
-    { name: "Stats", href: "/estadisticas", icon: TrendingUp },
-    { name: "Premium", href: "/suscripcion", icon: Crown },
-    { name: "Perfil", href: "/perfil", icon: User },
-  ];
-
-  const adminNavItems = [
-    { name: "Inicio", href: "/inicio", icon: Home },
-    { name: "Panel", href: "/admin", icon: LayoutDashboard },
-    { name: "Pagos", href: "/admin/pagos", icon: CreditCard },
+    { name: "Tenis", href: "/tenis", icon: Trophy },
     { name: "Stats", href: "/estadisticas", icon: TrendingUp },
     { name: "Perfil", href: "/perfil", icon: User },
   ];
-
-  const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
-    // 👈 fixed bottom-0 left-0 right-0 para anclar la barra al fondo de la pantalla
-    // bg-[#090a0e]/95 backdrop-blur-md para darle ese toque de app nativa (QvaPay style)
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-set-bg/95 backdrop-blur-md border-t border-gray-800 pb-safe">
       <nav className="flex justify-around items-center h-16 w-full px-1">
         {navItems.map((item) => {

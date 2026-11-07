@@ -64,7 +64,7 @@ export default async function DashboardLayout({
           </div>
         </main>
         
-        <BottomNav isAdmin={isAdmin} />
+        <BottomNav/>
       </div>
     </div>
   );
