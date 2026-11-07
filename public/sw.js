@@ -2,7 +2,7 @@
 const CACHE_VERSION = "v1";
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
-const PRECACHE = ["/", "/offline", "/manifest.webmanifest"];
+const PRECACHE = ["/", "/offline", "/manifest.webmanifest"]; 
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
