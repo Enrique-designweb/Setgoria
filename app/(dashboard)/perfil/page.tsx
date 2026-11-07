@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react"; // 👈 Solo importamos signOut
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -15,22 +16,36 @@ import {
   Settings, 
   LogOut, 
   ChevronRight, 
-  Gift 
+  Gift, 
+  Phone, 
+  CreditCard,
+  ShieldCheck
 } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { APP_VERSION } from "@/lib/constants";
 
 export default function ProfilePage() {
   const router = useRouter();
+  
+  // 👇 Eliminamos la línea de useSession()
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [kycStatus, setKycStatus] = useState("NOT_SUBMITTED");
 
-  const [formData, setFormData] = useState({ name: "", birthDate: "", email: "", role: "", image: "" });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    birthDate: "", 
+    phone: "",       
+    documentId: "",  
+    email: "", 
+    role: "", 
+    image: "" 
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -41,11 +56,14 @@ export default function ProfilePage() {
           setFormData({
             name: data.name || "",
             birthDate: data.birthDate ? new Date(data.birthDate).toISOString().split('T')[0] : "",
+            phone: data.phone || "",           
+            documentId: data.documentId || "", 
             email: data.email || "",
             role: data.role || "USER",
             image: data.image || "",
           });
           setReferralCode(data.referralCode || "");
+          setKycStatus(data.kycStatus || "NOT_SUBMITTED");
         }
       } catch (error: unknown) {
         console.error("Error cargando perfil", error);
@@ -85,11 +103,18 @@ export default function ProfilePage() {
       const res = await fetch("/api/user", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: formData.name, birthDate: formData.birthDate }),
+        body: JSON.stringify({ 
+          name: formData.name, 
+          birthDate: formData.birthDate,
+          phone: formData.phone,           
+          documentId: formData.documentId, 
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      toast.success("Perfil actualizado");
+      
+      setKycStatus("PENDING");
+      toast.success("Datos guardados. Tu KYC está en revisión.");
     } catch (err: unknown) {
       if (err instanceof Error) toast.error(err.message);
     } finally {
@@ -127,10 +152,17 @@ export default function ProfilePage() {
         </div>
         <h1 className="text-2xl font-bold">{formData.name || "Usuario"}</h1>
         <p className="text-sm text-gray-400">{formData.email}</p>
+        
         <div className="mt-2 flex items-center gap-2">
            <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${formData.role === 'ADMIN' ? 'bg-orange-500/20 text-orange-500' : 'bg-gray-800 text-gray-400'}`}>
               {formData.role}
            </span>
+           
+           {kycStatus === "APPROVED" && (
+             <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/20 text-green-500 border border-green-500/30 flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> Verificado
+             </span>
+           )}
            {file && (
               <button onClick={handleUploadAvatar} disabled={uploading} className="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded-md flex items-center gap-1 active:scale-95">
                 {uploading ? "Subiendo..." : "Guardar Foto"}
@@ -139,7 +171,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Menú estilo QvaPay */}
       <div className="space-y-6">
         
         {/* Referidos */}
@@ -160,22 +191,35 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Datos */}
-        <div className="bg-[#1A1D24] rounded-2xl overflow-hidden border border-gray-800">
-          <div className="p-3 border-b border-gray-800/50">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-2">Datos Personales</span>
+        {/* Datos Personales y KYC */}
+        <div id="kyc" className="bg-[#1A1D24] rounded-2xl overflow-hidden border border-gray-800 scroll-mt-24">
+          <div className="p-3 border-b border-gray-800/50 flex justify-between items-center">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-2">Verificación de Identidad (Opcional)</span>
+            {kycStatus === "PENDING" && <span className="text-[10px] text-yellow-500 font-bold pr-2">En revisión ⏳</span>}
           </div>
           <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <User className="w-5 h-5 text-gray-500" />
-              <input type="text" className="flex-1 bg-transparent border-b border-gray-700 pb-1 text-sm text-white focus:outline-none focus:border-orange-500" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Nombre" />
+              <input type="text" className="flex-1 bg-transparent border-b border-gray-700 pb-1 text-sm text-white focus:outline-none focus:border-orange-500" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Nombre completo" />
             </div>
+            
             <div className="flex items-center gap-3">
               <Calendar className="w-5 h-5 text-gray-500" />
               <input type="date" className="flex-1 bg-transparent border-b border-gray-700 pb-1 text-sm text-white focus:outline-none focus:border-orange-500 scheme-dark" value={formData.birthDate} onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} />
             </div>
+
+            <div className="flex items-center gap-3">
+              <Phone className="w-5 h-5 text-gray-500" />
+              <input type="tel" className="flex-1 bg-transparent border-b border-gray-700 pb-1 text-sm text-white focus:outline-none focus:border-orange-500" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="Número de teléfono" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-gray-500" />
+              <input type="text" className="flex-1 bg-transparent border-b border-gray-700 pb-1 text-sm text-white focus:outline-none focus:border-orange-500" value={formData.documentId} onChange={(e) => setFormData({ ...formData, documentId: e.target.value })} placeholder="Carnet de Identidad (CI)" />
+            </div>
+
             <button type="submit" disabled={saving} className="mt-2 w-full bg-orange-500 text-white font-bold py-2.5 rounded-xl text-sm active:scale-95 disabled:opacity-50">
-              {saving ? "Guardando..." : "Guardar Cambios"}
+              {saving ? "Guardando..." : "Guardar y Verificar"}
             </button>
           </form>
         </div>
@@ -194,7 +238,7 @@ export default function ProfilePage() {
           <Link href="/configuracion" className="flex items-center justify-between p-4 border-b border-gray-800/50 hover:bg-white/5 transition-colors">
             <div className="flex items-center gap-3">
               <div className="bg-gray-700/50 p-2 rounded-lg"><Settings className="w-5 h-5 text-gray-300" /></div>
-              <span className="text-sm font-medium">Configuración</span>
+              <span className="text-sm font-medium">Configuración y Suscripción</span>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-500" />
           </Link>

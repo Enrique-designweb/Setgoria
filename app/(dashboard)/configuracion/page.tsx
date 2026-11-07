@@ -12,25 +12,19 @@ import InstallPWA from "@/components/ui/InstallPWA";
 export default function ConfiguracionPage() {
   const { data: session } = useSession();
   
-  // Estados para las notificaciones
   const [emailAlerts, setEmailAlerts] = useState(false);
-  
-  // Estados para la contraseña
   const [passData, setPassData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [passStatus, setPassStatus] = useState({ loading: false });
 
-  // Estados para KYC y Telegram
   const [isTelegramLinked, setIsTelegramLinked] = useState(false);
   const [kycStatus, setKycStatus] = useState("NOT_SUBMITTED");
 
-  // 👇 SOLUCIÓN: Usamos un useEffect para consultar el estado real del usuario
   useEffect(() => {
     const fetchUserStatus = async () => {
       try {
         const res = await fetch("/api/user");
         if (res.ok) {
           const data = await res.json();
-          // Aquí usamos los setters para actualizar la UI
           setKycStatus(data.kycStatus || "NOT_SUBMITTED");
           setIsTelegramLinked(!!data.telegramId); 
         }
@@ -108,14 +102,15 @@ export default function ConfiguracionPage() {
             <div className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border">
               <div>
                 <p className="font-bold text-sm">Verificación de Identidad (KYC)</p>
-                <p className="text-xs text-set-muted">Valida tu Carnet de Identidad</p>
+                <p className="text-xs text-set-muted">Opcional. Obtén tu sello de verificado.</p>
               </div>
               {kycStatus === "APPROVED" ? (
                 <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded">✅ Verificado</span>
               ) : kycStatus === "PENDING" ? (
                 <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">⏳ En revisión</span>
               ) : (
-                <Link href="/perfil" className="text-xs font-bold text-orange-500 hover:underline">Completar</Link>
+                // 👇 SOLUCIÓN: Agregamos el #kyc al enlace
+                <Link href="/perfil#kyc" className="text-xs font-bold text-orange-500 hover:underline">Completar</Link>
               )}
             </div>
           </div>
