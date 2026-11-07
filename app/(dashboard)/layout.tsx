@@ -7,7 +7,7 @@ import TopBar from "@/components/layout/TopBar";
 import BottomNav from "@/components/layout/BottomNav";
 import Footer from "@/components/layout/Footer";
 import SubscriptionGate from "@/components/ui/SubscriptionGate";
-import InstallPwaBanner from "@/components/ui/InstallPwaBanner"; // 👈 IMPORTACIÓN AÑADIDA
+import InstallPwaBanner from "@/components/ui/InstallPwaBanner";
 
 export default async function DashboardLayout({
   children,
@@ -20,6 +20,14 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  // Obtenemos los datos del usuario de la BD
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { createdAt: true, role: true },
+  });
+
+  const isAdmin = user?.role === "ADMIN"; // 👈 Calculamos si es admin
+
   const activeSub = await prisma.subscription.findFirst({
     where: {
       userId: session.user.id,
@@ -30,13 +38,6 @@ export default async function DashboardLayout({
 
   const hasActiveSubscription = !!activeSub;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { createdAt: true, role: true },
-  });
-
-  const isAdmin = user?.role === "ADMIN";
-  
   const now = new Date().getTime(); 
   const trialExpiresAt = user ? new Date(user.createdAt).getTime() + 72 * 60 * 60 * 1000 : 0;
   const isTrialExpired = now > trialExpiresAt;
@@ -45,7 +46,6 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-set-bg text-white w-full overflow-hidden">
-      {/* Sidebar oculto en móvil, visible en pantallas medianas o grandes */}
       <div className="hidden md:flex w-64 shrink-0 border-r border-gray-800">
         <Sidebar isAdmin={isAdmin} />
       </div>
@@ -64,7 +64,8 @@ export default async function DashboardLayout({
           </div>
         </main>
         
-        <BottomNav />
+        {/* 👇 Le pasamos el isAdmin a la barra inferior */}
+        <BottomNav isAdmin={isAdmin} />
         <InstallPwaBanner />
       </div>
     </div>

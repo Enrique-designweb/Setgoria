@@ -1,20 +1,33 @@
+// components/layout/BottomNav.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Zap, TrendingUp, User, Trophy } from "lucide-react";
+import { Home, Zap, User, TrendingUp, Trophy, LayoutDashboard } from "lucide-react";
 import { clsx } from "clsx";
 
-export default function BottomNav() {
+interface BottomNavProps {
+  isAdmin: boolean;
+}
+
+export default function BottomNav({ isAdmin }: BottomNavProps) {
   const pathname = usePathname();
 
-  const navItems = [
-    { name: "Inicio", href: "/inicio", icon: Home },
-    { name: "Fútbol", href: "/futbol", icon: Zap },
-    { name: "Tenis", href: "/tenis", icon: Trophy },
-    { name: "Stats", href: "/estadisticas", icon: TrendingUp },
-    { name: "Perfil", href: "/perfil", icon: User },
-  ];
+  const navItems = isAdmin 
+    ? [
+        { name: "Inicio", href: "/inicio", icon: Home },
+        { name: "Fútbol", href: "/futbol", icon: Zap },
+        { name: "Admin", href: "/admin", icon: LayoutDashboard }, 
+        { name: "Stats", href: "/estadisticas", icon: TrendingUp },
+        { name: "Perfil", href: "/perfil", icon: User },
+      ]
+    : [
+        { name: "Inicio", href: "/inicio", icon: Home },
+        { name: "Fútbol", href: "/futbol", icon: Zap },
+        { name: "Tenis", href: "/tenis", icon: Trophy },
+        { name: "Stats", href: "/estadisticas", icon: TrendingUp },
+        { name: "Perfil", href: "/perfil", icon: User },
+      ];
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-set-bg/95 backdrop-blur-md border-t border-gray-800 pb-safe">

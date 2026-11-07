@@ -3,31 +3,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react"; // 👈 Solo importamos signOut
+import { signOut } from "next-auth/react"; 
 import Link from "next/link";
 import Image from "next/image";
 import { 
-  User, 
-  Calendar, 
-  Camera, 
-  Loader2, 
-  History, 
-  FileText, 
-  Settings, 
-  LogOut, 
-  ChevronRight, 
-  Gift, 
-  Phone, 
-  CreditCard,
-  ShieldCheck
+  User, Calendar, Camera, Loader2, History, FileText, Settings, LogOut, 
+  ChevronRight, Gift, Phone, CreditCard, ShieldCheck, LayoutDashboard
 } from "lucide-react";
 import { toast } from "sonner";
 import { APP_VERSION } from "@/lib/constants";
 
 export default function ProfilePage() {
   const router = useRouter();
-  
-  // 👇 Eliminamos la línea de useSession()
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,13 +25,7 @@ export default function ProfilePage() {
   const [kycStatus, setKycStatus] = useState("NOT_SUBMITTED");
 
   const [formData, setFormData] = useState({ 
-    name: "", 
-    birthDate: "", 
-    phone: "",       
-    documentId: "",  
-    email: "", 
-    role: "", 
-    image: "" 
+    name: "", birthDate: "", phone: "", documentId: "", email: "", role: "", image: "" 
   });
 
   useEffect(() => {
@@ -104,10 +85,7 @@ export default function ProfilePage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          name: formData.name, 
-          birthDate: formData.birthDate,
-          phone: formData.phone,           
-          documentId: formData.documentId, 
+          name: formData.name, birthDate: formData.birthDate, phone: formData.phone, documentId: formData.documentId, 
         }),
       });
       const data = await res.json();
@@ -157,7 +135,6 @@ export default function ProfilePage() {
            <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${formData.role === 'ADMIN' ? 'bg-orange-500/20 text-orange-500' : 'bg-gray-800 text-gray-400'}`}>
               {formData.role}
            </span>
-           
            {kycStatus === "APPROVED" && (
              <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-green-500/20 text-green-500 border border-green-500/30 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> Verificado
@@ -173,6 +150,17 @@ export default function ProfilePage() {
 
       <div className="space-y-6">
         
+        {/* BOTÓN GIGANTE PARA EL ADMIN */}
+        {formData.role === "ADMIN" && (
+          <Link 
+            href="/admin" 
+            className="flex items-center justify-center gap-3 w-full bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg shadow-orange-500/30 transition-all active:scale-95 animate-pulse"
+          >
+            <LayoutDashboard className="w-6 h-6" />
+            Ir al Panel de Administración
+          </Link>
+        )}
+
         {/* Referidos */}
         {referralCode && (
           <div className="bg-[#1A1D24] rounded-2xl overflow-hidden border border-gray-800">
