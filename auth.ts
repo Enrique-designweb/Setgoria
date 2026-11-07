@@ -37,12 +37,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isValid = await bcrypt.compare(credentials.password as string, user.password)
         if (!isValid) throw new Error("Credenciales incorrectas")
 
-        // Si ya verificó el OTP antes, entra directo
         if (user.hasVerifiedOtp) {
           return user;
         }
 
-        // Si es la primera vez, validar OTP
         if (!credentials.otp) throw new Error("OTP requerido");
         
         if (!user.twoFactorCode || !user.twoFactorExpiresAt || user.twoFactorExpiresAt < new Date()) {
@@ -79,7 +77,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } })
           if (!dbUser) return null
-        } catch (error) { 
+        } catch (error: unknown) { 
           console.error("Error de conexión a BD en JWT:", error) 
         }
       }
@@ -91,7 +89,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as string
         session.user.createdAt = token.createdAt as Date
         
-        // Verificamos si tiene suscripción activa
         try {
           const sub = await prisma.subscription.findFirst({
             where: { 
@@ -101,7 +98,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           });
           session.user.isPremium = !!sub;
-        } catch { // 👈 Corregido: Sin variable, evita el error de ESLint
+        } catch {
           session.user.isPremium = false;
         }
       }

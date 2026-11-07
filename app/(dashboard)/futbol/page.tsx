@@ -2,27 +2,30 @@
 import { prisma } from "@/lib/prisma";
 import { getFootballMatches } from "@/lib/football-api";
 import LiveMatches from "@/components/ui/LiveMatches";
-import FutbolClient from "./FutbolClient";
+import MatchAccordion from "@/components/ui/MatchAccordion";
 import type { OfflineMatch } from "@/lib/offline-db";
+import { auth } from "@/auth";
+import { GenericMatch } from "@/components/ui/MatchCard"; // 👈 Importamos el tipo
 
 export const revalidate = 300; 
 
 export default async function FutbolPage() {
+  const session = await auth();
   let matches: OfflineMatch[] = [];
 
   try {
     const apiMatches = await getFootballMatches();
     if (apiMatches.length > 0) {
       matches = apiMatches.map((m) => ({
-        id: m.id,
-        league: m.league,
-        homeTeam: m.homeTeam,
+        id: m.id, 
+        league: m.league, 
+        homeTeam: m.homeTeam, 
         awayTeam: m.awayTeam,
-        matchDate: m.matchDate,
-        sport: "FUTBOL",
+        matchDate: m.matchDate, 
+        sport: "FUTBOL", 
         status: m.status,
-        homeScore: m.homeScore,
-        awayScore: m.awayScore,
+        homeScore: m.homeScore, 
+        awayScore: m.awayScore, 
         elapsed: m.elapsed,
         predictions: [],
       }));
@@ -32,12 +35,11 @@ export default async function FutbolPage() {
   }
 
   if (matches.length === 0) {
-    // 👈 LIMITAMOS LA CARGA A SOLO 15 PARTIDOS para no abrumar
     const dbMatches = await prisma.match.findMany({
       where: { sport: "FUTBOL" },
       include: { predictions: true },
       orderBy: { matchDate: "asc" },
-      take: 15, 
+      take: 50,
     });
     
     matches = dbMatches.map((m) => ({
@@ -48,7 +50,15 @@ export default async function FutbolPage() {
   }
 
   const live = matches.filter((m) => m.status === "LIVE" || m.status === "HT");
-  const upcoming = matches.filter((m) => m.status !== "LIVE" && m.status !== "HT").slice(0, 10);
+  const upcoming = matches.filter((m) => m.status !== "LIVE" && m.status !== "HT").slice(0, 30);
+
+  let hasActiveSubscription = false;
+  if (session?.user?.id) {
+    const activeSub = await prisma.subscription.findFirst({
+      where: { userId: session.user.id, status: "ACTIVE", expiresAt: { gt: new Date() } }
+    });
+    if (activeSub) hasActiveSubscription = true;
+  }
 
   return (
     <div className="p-4 md:p-6 pb-24">
@@ -65,7 +75,17 @@ export default async function FutbolPage() {
 
       <div>
         <h2 className="text-sm font-bold text-gray-400 mb-3 uppercase">Próximos Partidos</h2>
-        <FutbolClient matches={upcoming} /> 
+        <div className="flex flex-col gap-3">
+          {upcoming.map((match) => (
+            <MatchAccordion 
+              key={match.id} 
+              // 👇 SOLUCIÓN AL 'ANY': Casteamos a 'unknown' y luego a 'GenericMatch'
+              match={match as unknown as GenericMatch} 
+              hasActiveSubscription={hasActiveSubscription} 
+              isAdmin={session?.user?.role === "ADMIN"} 
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

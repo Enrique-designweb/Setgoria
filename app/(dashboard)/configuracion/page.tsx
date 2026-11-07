@@ -3,12 +3,15 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Bell, Moon, Sun, KeyRound } from "lucide-react";
+import { useSession } from "next-auth/react"; // 👈 Para obtener el ID del usuario
+import { Bell, Moon, Sun, KeyRound, CreditCard, Send } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
-import PushNotificationButton from "@/components/ui/PushNotificationButton"; // 👈 Importamos
+import PushNotificationButton from "@/components/ui/PushNotificationButton";
 
 export default function ConfiguracionPage() {
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession(); // 👈 Obtenemos la sesión
   const [emailAlerts, setEmailAlerts] = useState(false);
 
   const [passData, setPassData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -52,7 +55,30 @@ export default function ConfiguracionPage() {
 
       <div className="bg-set-surface border border-set-border rounded-2xl p-6 md:p-8 space-y-10">
         
-        {/* 1. Apariencia */}
+        {/* 1. Cuenta y Suscripción */}
+        <section>
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+            <CreditCard className="w-5 h-5 text-orange-500" /> Cuenta y Suscripción
+          </h2>
+          <div className="space-y-3">
+            <Link href="/suscripcion" className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border hover:bg-white/5 transition-colors">
+              <div>
+                <p className="font-bold text-sm">Mi Suscripción</p>
+                <p className="text-xs text-set-muted">Renueva o cambia tu plan Premium</p>
+              </div>
+            </Link>
+
+            <a href={`https://t.me/SetgoriaBot?start=${session?.user?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border hover:bg-white/5 transition-colors">
+              <div>
+                <p className="font-bold text-sm">Vincular Telegram</p>
+                <p className="text-xs text-set-muted">Recibe alertas y códigos de acceso</p>
+              </div>
+              <Send className="w-5 h-5 text-blue-500" />
+            </a>
+          </div>
+        </section>
+
+        {/* 2. Apariencia */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <Sun className="w-5 h-5 text-orange-500" /> Apariencia
@@ -73,7 +99,7 @@ export default function ConfiguracionPage() {
           </div>
         </section>
 
-        {/* 2. Seguridad */}
+        {/* 3. Seguridad */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <KeyRound className="w-5 h-5 text-orange-500" /> Seguridad
@@ -106,13 +132,12 @@ export default function ConfiguracionPage() {
           </form>
         </section>
 
-        {/* 3. Notificaciones */}
+        {/* 4. Notificaciones */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <Bell className="w-5 h-5 text-orange-500" /> Notificaciones
           </h2>
           <div className="space-y-3">
-            {/* 👈 AQUÍ INTEGRAMOS EL BOTÓN PUSH REAL */}
             <PushNotificationButton />
 
             <div className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border">
