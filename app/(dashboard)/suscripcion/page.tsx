@@ -5,20 +5,31 @@ import { useState } from "react";
 import { Check, CreditCard, Smartphone, Bitcoin, Landmark, ShieldCheck, Copy, CheckCircle2, Lock, AlertCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
-// 👈 PRECIOS DE PRUEBA
+// 👇 PRECIOS REALES ACTUALIZADOS
 const PLANS = [
-  { id: "WEEKLY", name: "Semanal", priceUSD: 0.10, priceCUP: 10000, features: ["Acceso por 7 días", "Pronósticos diarios", "Soporte estándar"] },
-  { id: "MONTHLY", name: "Mensual", priceUSD: 0.20, priceCUP: 25000, features: ["Acceso por 30 días", "Análisis premium", "Soporte prioritario"] },
+  { 
+    id: "WEEKLY", 
+    name: "Semanal", 
+    priceUSD: 9.00,       // 👈 $9 USD
+    priceCUP: 10000,      // 👈 10,000 CUP
+    features: ["Acceso por 7 días", "Pronósticos diarios", "Soporte estándar"] 
+  },
+  { 
+    id: "MONTHLY", 
+    name: "Mensual", 
+    priceUSD: 24.00,      // 👈 $24 USD
+    priceCUP: 25000,      // 👈 25,000 CUP
+    features: ["Acceso por 30 días", "Análisis premium", "Soporte prioritario", "Acceso al Bot de Telegram"] 
+  },
 ];
 
 const PAYMENT_METHODS = [
   { id: "QVAPAY", name: "QvaPay", icon: Bitcoin, desc: "Pago automático" },
   { id: "TRANSFERMOVIL", name: "Transfermóvil", icon: Smartphone, desc: "Transferencia CUP" },
-  { id: "CARD", name: "Tarjeta Clásica", icon: CreditCard, desc: "Pago en USD" },
+  { id: "CARD", name: "Tarjeta MLC", icon: CreditCard, desc: "Pago en MLC/USD" },
   { id: "USDT", name: "USDT (TRC20)", icon: Landmark, desc: "Criptomoneda" },
 ];
 
-// 👈 DIRECCIÓN TRON REAL CORREGIDA
 const YOUR_WALLET = "TPghZv26N8xwjaS6ZEoHpHtUD6eXo1qjXe"; 
 
 const formatCUP = (amount: number) => {
@@ -167,7 +178,7 @@ export default function SubscriptionPage() {
         </div>
         <h2 className="text-3xl font-black text-white mb-2">¡Pago Confirmado!</h2>
         <p className="text-gray-400 max-w-md">
-          Tu suscripción ha sido activada automáticamente. Ya puedes disfrutar de todo el contenido premium.
+          Tu suscripción ha sido procesada. Si pagaste por Transfermóvil, el administrador la activará en breve.
         </p>
       </div>
     );
@@ -246,6 +257,7 @@ export default function SubscriptionPage() {
                   <p className="text-gray-300 text-sm">
                     Realiza una transferencia por <strong className="text-orange-400">{formatCUP(PLANS.find(p => p.id === selectedPlan)?.priceCUP || 0)} CUP</strong> a la siguiente tarjeta:
                   </p>
+                  {/* 👇 TARJETA CUP INTACTA */}
                   <SecureCard number="9224-9598-7180-4702" label="Tarjeta CUP (Transfermóvil)" />
                 </div>
               )}
@@ -255,7 +267,8 @@ export default function SubscriptionPage() {
                    <p className="text-gray-300 text-sm">
                     Realiza el pago por <strong className="text-orange-400">${PLANS.find(p => p.id === selectedPlan)?.priceUSD} USD</strong> a la siguiente tarjeta:
                   </p>
-                  <SecureCard number="9760-0390-0096-2729" label="Tarjeta Clásica (USD)" />
+                  {/* 👇 TARJETA MLC INTACTA */}
+                  <SecureCard number="9760-0390-0096-2729" label="Tarjeta MLC / Clásica (USD)" />
                 </div>
               )}
 
