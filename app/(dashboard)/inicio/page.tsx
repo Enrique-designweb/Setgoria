@@ -1,7 +1,8 @@
+// app/(dashboard)/inicio/page.tsx
 import { prisma } from "@/lib/prisma";
 import MatchCard from "@/components/ui/MatchCard";
 import { auth } from "@/auth";
-import StoriesBar from "@/components/ui/StoriesBar";
+import StoriesBar, { StoryData } from "@/components/ui/StoriesBar";
 import LiveMatches from "@/components/ui/LiveMatches";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -12,6 +13,24 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const session = await auth();
 
+  // 👇 1. Obtener Historias VÁLIDAS (Creadas hace menos de 24h)
+  const now = new Date();
+  const dbStories = await prisma.story.findMany({
+    where: {
+      expiresAt: { gt: now } // Solo si la fecha de expiración es mayor al momento actual
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10 
+  });
+
+  const stories: StoryData[] = dbStories.map(s => ({
+    id: s.id,
+    title: s.title,
+    imageUrl: s.imageUrl,
+    videoUrl: s.videoUrl
+  }));
+
+  // 👇 2. Obtener Partidos Destacados
   const matches = await prisma.match.findMany({
     include: { predictions: true },
     orderBy: { matchDate: 'asc' },
@@ -24,19 +43,14 @@ export default async function Home() {
   });
 
   const liveMatches: OfflineMatch[] = liveMatchesRaw.map((m) => ({
-    id: m.id,
-    league: m.league,
-    homeTeam: m.homeTeam,
-    awayTeam: m.awayTeam,
-    matchDate: m.matchDate.toISOString(),
-    sport: m.sport,
+    id: m.id, league: m.league, homeTeam: m.homeTeam, awayTeam: m.awayTeam,
+    matchDate: m.matchDate.toISOString(), sport: m.sport,
     status: m.status as "NS" | "LIVE" | "HT" | "FT" | "CANC",
-    homeScore: m.homeScore,
-    awayScore: m.awayScore,
-    elapsed: m.elapsed,
+    homeScore: m.homeScore, awayScore: m.awayScore, elapsed: m.elapsed,
     predictions: m.predictions,
   }));
 
+  // 👇 3. Verificar Suscripción
   let hasActiveSubscription = false;
   if (session?.user?.id) {
     const activeSub = await prisma.subscription.findFirst({
@@ -46,10 +60,11 @@ export default async function Home() {
   }
 
   return (
-    // 👇 Añadimos w-full y overflow-x-hidden para evitar desbordes horizontales
     <main className="p-4 md:p-10 min-h-screen bg-set-bg text-white w-full overflow-x-hidden">
       <div className="max-w-4xl mx-auto w-full">
-        <StoriesBar />
+        
+        {/* 👇 Renderizamos las historias dinámicas */}
+        <StoriesBar stories={stories} />
         
         <LiveMatches matches={liveMatches} />
         

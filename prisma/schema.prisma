@@ -249,3 +249,12 @@ model TelegramUser {
   userId    String?  // Vinculado al usuario de la web (opcional)
   createdAt DateTime @default(now())
 }
+
+model Story {
+  id        String   @id @default(cuid())
+  title     String
+  imageUrl  String
+  videoUrl  String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+}

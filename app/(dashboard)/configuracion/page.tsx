@@ -3,15 +3,16 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { useSession } from "next-auth/react"; // 👈 Para obtener el ID del usuario
+import { useSession } from "next-auth/react";
 import { Bell, Moon, Sun, KeyRound, CreditCard, Send } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import PushNotificationButton from "@/components/ui/PushNotificationButton";
+import InstallPWA from "@/components/ui/InstallPWA"; // 👈 Importamos el botón PWA
 
 export default function ConfiguracionPage() {
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession(); // 👈 Obtenemos la sesión
+  const { data: session } = useSession();
   const [emailAlerts, setEmailAlerts] = useState(false);
 
   const [passData, setPassData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -139,7 +140,6 @@ export default function ConfiguracionPage() {
           </h2>
           <div className="space-y-3">
             <PushNotificationButton />
-
             <div className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border">
               <div>
                 <p className="font-bold text-sm">Correos Informativos</p>
@@ -149,6 +149,18 @@ export default function ConfiguracionPage() {
                 <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${emailAlerts ? 'translate-x-6' : ''}`} />
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* 5. Instalar PWA */}
+        <section>
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+            <Sun className="w-5 h-5 text-orange-500" /> Aplicación Móvil
+          </h2>
+          <div className="bg-set-bg p-4 rounded-xl border border-set-border">
+            <p className="text-sm font-bold mb-1">Instala Setgoria</p>
+            <p className="text-xs text-set-muted mb-3">Accede más rápido desde tu pantalla de inicio como una app nativa.</p>
+            <InstallPWA /> {/* 👈 AQUÍ ESTÁ EL BOTÓN PWA */}
           </div>
         </section>
 
