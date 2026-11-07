@@ -11,7 +11,7 @@ interface Props {
 
 export default function HowItWorksModal({ isOpen, onClose }: Props) {
   const steps = [
-    { icon: UserPlus, title: "1. Regístrate", desc: "Crea tu cuenta en segundos y verifica tu edad." },
+    { icon: UserPlus, title: "1. Regístrate", desc: "Crea tu cuenta y verifica tu identidad con tu CI." },
     { icon: CreditCard, title: "2. Activa Premium", desc: "Paga fácil con Transfermóvil, QvaPay o USDT." },
     { icon: Send, title: "3. Vincula Telegram", desc: "Conecta tu cuenta para recibir alertas y códigos." },
     { icon: TrendingUp, title: "4. Gana", desc: "Accede a pronósticos exclusivos y sigue las estadísticas." },
@@ -21,7 +21,6 @@ export default function HowItWorksModal({ isOpen, onClose }: Props) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Fondo oscuro */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -30,7 +29,6 @@ export default function HowItWorksModal({ isOpen, onClose }: Props) {
             className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm"
           />
           
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -38,14 +36,9 @@ export default function HowItWorksModal({ isOpen, onClose }: Props) {
             className="fixed inset-0 z-101 flex items-center justify-center p-4 pointer-events-none"
           >
             <div className="bg-set-surface w-full max-w-md rounded-3xl p-6 border border-gray-800 shadow-2xl pointer-events-auto relative overflow-hidden">
-              
-              {/* Brillo superior */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/20 blur-3xl rounded-full"></div>
 
-              <button 
-                onClick={onClose}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 p-2 rounded-full transition-colors z-10"
-              >
+              <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/5 p-2 rounded-full transition-colors z-10">
                 <X size={20} />
               </button>
 
@@ -67,11 +60,7 @@ export default function HowItWorksModal({ isOpen, onClose }: Props) {
                 ))}
               </div>
 
-              <Link 
-                href="/suscripcion" 
-                onClick={onClose}
-                className="mt-6 w-full block text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95"
-              >
+              <Link href="/suscripcion" onClick={onClose} className="mt-6 w-full block text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95">
                 Empezar ahora
               </Link>
             </div>

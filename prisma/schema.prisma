@@ -67,6 +67,13 @@ enum PredictionResult {
   LOST
 }
 
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_SUBMITTED
+}
+
 // --- MODELOS ---
 model Match {
   id          String       @id @default(cuid())
@@ -124,6 +131,10 @@ model User {
   referredById String?
   referredBy   User?    @relation("UserReferrals", fields: [referredById], references: [id])
   referrals    User[]   @relation("UserReferrals")
+  phone         String?
+  documentId    String?
+  idCardUrl     String?
+  kycStatus     KycStatus @default(NOT_SUBMITTED)
 }
 
 model AdminLog {

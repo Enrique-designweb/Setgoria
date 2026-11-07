@@ -1,8 +1,9 @@
 // app/api/payments/verify-usdt/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"; // 👈 Faltaba esta importación
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Plan } from "@/src/generated/prisma/client";
+import { processSuccessfulPayment } from "@/lib/subscription-logic"; // 👈 Faltaba esta importación
 
 const USDT_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // Contrato oficial de USDT en TRON
 
@@ -67,32 +68,16 @@ export async function POST(req: Request) {
     }
 
     // 7. ¡Todo correcto! Activar suscripción automáticamente
-    let daysToAdd = 7;
-    if (transaction.plan === "MONTHLY") daysToAdd = 30;
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + daysToAdd);
-
-    await prisma.$transaction([
-      prisma.transaction.update({
+    await prisma.$transaction(async (tx) => {
+      // Marcar transacción como completada
+      await tx.transaction.update({
         where: { id: transactionId },
         data: { status: "COMPLETED", usdtTxHash: txHash },
-      }),
-      prisma.subscription.create({
-        data: {
-          userId: session.user.id,
-          plan: transaction.plan as Plan,
-          status: "ACTIVE",
-          expiresAt,
-        },
-      }),
-      prisma.notification.create({
-        data: {
-          userId: session.user.id,
-          message: `✅ ¡Pago en USDT confirmado! Tu plan ${transaction.plan} está activo hasta el ${expiresAt.toLocaleDateString('es-ES')}.`,
-        },
-      }),
-    ]);
+      });
+
+      // 👇 LLAMAMOS A LA FUNCIÓN MÁGICA (La que creamos en lib/subscription-logic.ts)
+      await processSuccessfulPayment(tx, session.user.id, transaction.plan as Plan);
+    });
 
     return NextResponse.json({ success: true, message: "Pago verificado y suscripción activada" });
 
