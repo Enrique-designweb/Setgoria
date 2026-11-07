@@ -1,22 +1,45 @@
 // app/(dashboard)/configuracion/page.tsx
 "use client";
 
-import { useState } from "react";
-import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Bell, Moon, Sun, KeyRound, CreditCard, Send } from "lucide-react";
 import Link from "next/link";
+import { Bell, KeyRound, CreditCard, Send, ShieldCheck, Download } from "lucide-react";
 import { toast } from "sonner";
 import PushNotificationButton from "@/components/ui/PushNotificationButton";
-import InstallPWA from "@/components/ui/InstallPWA"; // 👈 Importamos el botón PWA
+import InstallPWA from "@/components/ui/InstallPWA";
 
 export default function ConfiguracionPage() {
-  const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
+  
+  // Estados para las notificaciones
   const [emailAlerts, setEmailAlerts] = useState(false);
-
+  
+  // Estados para la contraseña
   const [passData, setPassData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [passStatus, setPassStatus] = useState({ loading: false });
+
+  // Estados para KYC y Telegram
+  const [isTelegramLinked, setIsTelegramLinked] = useState(false);
+  const [kycStatus, setKycStatus] = useState("NOT_SUBMITTED");
+
+  // 👇 SOLUCIÓN: Usamos un useEffect para consultar el estado real del usuario
+  useEffect(() => {
+    const fetchUserStatus = async () => {
+      try {
+        const res = await fetch("/api/user");
+        if (res.ok) {
+          const data = await res.json();
+          // Aquí usamos los setters para actualizar la UI
+          setKycStatus(data.kycStatus || "NOT_SUBMITTED");
+          setIsTelegramLinked(!!data.telegramId); 
+        }
+      } catch (err) {
+        console.error("Error al cargar estado del usuario", err);
+      }
+    };
+    fetchUserStatus();
+  }, []);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +77,12 @@ export default function ConfiguracionPage() {
     <div className="p-6 md:p-10 max-w-3xl mx-auto text-set-text pb-24">
       <h1 className="text-3xl font-black italic text-orange-500 uppercase mb-8">Configuración</h1>
 
-      <div className="bg-set-surface border border-set-border rounded-2xl p-6 md:p-8 space-y-10">
+      <div className="bg-set-surface border border-set-border rounded-2xl p-6 md:p-8 space-y-8">
         
-        {/* 1. Cuenta y Suscripción */}
+        {/* 1. Cuenta, KYC y Telegram */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-            <CreditCard className="w-5 h-5 text-orange-500" /> Cuenta y Suscripción
+            <ShieldCheck className="w-5 h-5 text-orange-500" /> Mi Cuenta y Seguridad
           </h2>
           <div className="space-y-3">
             <Link href="/suscripcion" className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border hover:bg-white/5 transition-colors">
@@ -67,6 +90,7 @@ export default function ConfiguracionPage() {
                 <p className="font-bold text-sm">Mi Suscripción</p>
                 <p className="text-xs text-set-muted">Renueva o cambia tu plan Premium</p>
               </div>
+              <CreditCard className="w-5 h-5 text-orange-500" />
             </Link>
 
             <a href={`https://t.me/SetgoriaBot?start=${session?.user?.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border hover:bg-white/5 transition-colors">
@@ -74,33 +98,30 @@ export default function ConfiguracionPage() {
                 <p className="font-bold text-sm">Vincular Telegram</p>
                 <p className="text-xs text-set-muted">Recibe alertas y códigos de acceso</p>
               </div>
-              <Send className="w-5 h-5 text-blue-500" />
+              {isTelegramLinked ? (
+                <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded">✅ Vinculado</span>
+              ) : (
+                <Send className="w-5 h-5 text-blue-500" />
+              )}
             </a>
-          </div>
-        </section>
 
-        {/* 2. Apariencia */}
-        <section>
-          <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-            <Sun className="w-5 h-5 text-orange-500" /> Apariencia
-          </h2>
-          <div className="bg-set-bg p-4 rounded-xl border border-set-border flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="font-bold text-sm">Tema de la aplicación</p>
-              <p className="text-xs text-set-muted">Elige el nivel de contraste que prefieras.</p>
-            </div>
-            <div className="flex bg-set-surface p-1 rounded-lg border border-set-border">
-              <button onClick={() => setTheme("theme-confort")} className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 text-xs font-bold ${theme === 'theme-confort' ? 'bg-orange-500 text-white' : 'text-set-muted hover:text-white'}`}>
-                <Sun className="w-4 h-4" /> Confort
-              </button>
-              <button onClick={() => setTheme("theme-oled")} className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 text-xs font-bold ${theme === 'theme-oled' ? 'bg-orange-500 text-white' : 'text-set-muted hover:text-white'}`}>
-                <Moon className="w-4 h-4" /> OLED
-              </button>
+            <div className="flex items-center justify-between bg-set-bg p-4 rounded-xl border border-set-border">
+              <div>
+                <p className="font-bold text-sm">Verificación de Identidad (KYC)</p>
+                <p className="text-xs text-set-muted">Valida tu Carnet de Identidad</p>
+              </div>
+              {kycStatus === "APPROVED" ? (
+                <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-1 rounded">✅ Verificado</span>
+              ) : kycStatus === "PENDING" ? (
+                <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded">⏳ En revisión</span>
+              ) : (
+                <Link href="/perfil" className="text-xs font-bold text-orange-500 hover:underline">Completar</Link>
+              )}
             </div>
           </div>
         </section>
 
-        {/* 3. Seguridad */}
+        {/* 2. Seguridad (Contraseña) */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <KeyRound className="w-5 h-5 text-orange-500" /> Seguridad
@@ -133,7 +154,7 @@ export default function ConfiguracionPage() {
           </form>
         </section>
 
-        {/* 4. Notificaciones */}
+        {/* 3. Notificaciones */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
             <Bell className="w-5 h-5 text-orange-500" /> Notificaciones
@@ -152,15 +173,15 @@ export default function ConfiguracionPage() {
           </div>
         </section>
 
-        {/* 5. Instalar PWA */}
+        {/* 4. Instalar PWA */}
         <section>
           <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-            <Sun className="w-5 h-5 text-orange-500" /> Aplicación Móvil
+            <Download className="w-5 h-5 text-orange-500" /> Aplicación Móvil
           </h2>
           <div className="bg-set-bg p-4 rounded-xl border border-set-border">
             <p className="text-sm font-bold mb-1">Instala Setgoria</p>
             <p className="text-xs text-set-muted mb-3">Accede más rápido desde tu pantalla de inicio como una app nativa.</p>
-            <InstallPWA /> {/* 👈 AQUÍ ESTÁ EL BOTÓN PWA */}
+            <InstallPWA />
           </div>
         </section>
 

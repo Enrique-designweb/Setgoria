@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     // 3. Configuración de planes
     const planConfig: Record<string, { amount: number; currency: Currency }> = {
-      WEEKLY: { amount: 0.10, currency: Currency.USD },
+      WEEKLY: { amount: 9, currency: Currency.USD },
       MONTHLY: { amount: 24, currency: Currency.USD },
     };
 
