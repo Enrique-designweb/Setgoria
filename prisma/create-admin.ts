@@ -1,35 +1,33 @@
 // prisma/create-admin.ts
 import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import bcrypt from 'bcryptjs'; // 👈 Importamos bcryptjs
+import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const adminEmail = 'hernanglez06@gmail.com'; // 👈 CAMBIA ESTO POR EL CORREO DEL DUEÑO
-  const adminName = 'Dueño SETGORIA';
+  const adminEmail = 'leonardofonseca302@gmail.com'; // 👈 Correo del dueño
+  const adminName = 'Leonardo Fonseca';
   
-  // 👈 CONTRASEÑA POR DEFECTO (Puedes cambiarla aquí)
-  const plainPassword = 'Admin123!'; 
+  const plainPassword = 'Leofonseca24'; // 👈 Contraseña del dueño
   
-  // Encriptamos la contraseña
   const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: { 
       role: 'ADMIN', 
-      hasVerifiedOtp: true,
-      password: hashedPassword // 👈 Actualizamos la contraseña si ya existe
+      hasVerifiedOtp: true, // Para que no le pida OTP en el primer login
+      password: hashedPassword 
     },
     create: {
       email: adminEmail,
       name: adminName,
       role: 'ADMIN',
       hasVerifiedOtp: true,
-      password: hashedPassword, // 👈 Guardamos la contraseña encriptada
+      password: hashedPassword, 
       birthDate: new Date('1990-01-01'),
     },
   });

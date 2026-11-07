@@ -1,7 +1,7 @@
 // app/api/telegram/webhook/route.ts
 import { NextResponse } from "next/server";
-import { Telegraf, Markup } from "telegraf";
-import { prisma } from "@/lib/prisma";
+import { Telegraf, Markup } from "telegraf"; 
+import { prisma } from "@/lib/prisma";       
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN!);
 
@@ -78,9 +78,17 @@ bot.action('login', async (ctx) => {
   return ctx.reply("🔐 Por favor, escribe tu correo electrónico para vincular tu cuenta de Telegram con la web:");
 });
 
+// 👇 AQUÍ ESTÁ EL CAMBIO DEL CORREO DE SOPORTE
 bot.action('soporte', async (ctx) => {
   await ctx.answerCbQuery();
-  return ctx.reply("🆘 Soporte Técnico:\n📧 hernanglez06@gmail.com\n💬 WhatsApp: +53 51756491");
+  return ctx.reply(
+    "🆘 *Soporte Técnico SETGORIA*\n\n" +
+    "¿Tienes problemas con tu cuenta o pagos?\n\n" +
+    "📧 Email: leonardofonseca302@gmail.com\n" + // 👈 Correo de Leo
+    "💬 WhatsApp: +53 51756491\n\n" +          // (Asumo que este WhatsApp es el de Leo o el de la agencia)
+    "Te responderemos lo antes posible.",
+    { parse_mode: "Markdown" }
+  );
 });
 
 // --- MANEJO DE TEXTO (Vincular Correo) ---
