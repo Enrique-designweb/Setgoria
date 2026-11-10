@@ -7,7 +7,7 @@ import { QvaPaySDK } from "sdk-qvapay";
 import { paymentLimiter } from "@/lib/ratelimit";
 import { createPaymentSchema } from "@/lib/validations";
 import { Plan, PaymentMethod, Currency } from "@/src/generated/prisma/client";
-import { sendVerificationEmail } from "@/lib/email"; // 👈 Importamos el helper
+import { sendVerificationEmail } from "@/lib/email"; 
 
 const qvapay = new QvaPaySDK({
   appId: process.env.QVAPAY_APP_ID!,
@@ -75,7 +75,6 @@ export async function POST(req: Request) {
       hashedCode = crypto.createHash('sha256').update(plainCode).digest('hex');
       expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
-      // 👈 IMPRIMIR EN CONSOLA PARA PRUEBAS LOCALES
       if (process.env.NODE_ENV === 'development') {
         console.log('\n=========================================');
         console.log(`💳 CÓDIGO DE PAGO PARA ${session.user.email}: ${plainCode}`);
@@ -91,23 +90,23 @@ export async function POST(req: Request) {
         amount: selectedPlan.amount,
         currency: currency,
         method: method as PaymentMethod,
-        status: "PENDING",
+        status: "PENDING", // Al crearse, queda pendiente
         paymentCodeHash: hashedCode,
         codeExpiresAt: expiresAt,
       },
     });
 
-    // 👈 6. ENVIAR EL CORREO CON EL CÓDIGO OTP
+    // 6. ENVIAR EL CORREO CON EL CÓDIGO OTP
     if (plainCode && session.user.email) {
       await sendVerificationEmail(session.user.email, plainCode);
     }
 
-    // 7. Flujo QvaPay (Automático)
+    // 7. Flujo QvaPay (Automático, pero con revisión manual posterior)
     if (method === "QVAPAY") {
       const invoice = await qvapay.app.createInvoice({
         amount: selectedPlan.amount,
         description: `Suscripción ${plan} - SETGORIA`,
-        remote_id: transaction.id,
+        remote_id: transaction.id, // 👈 Enviamos el ID de la transacción
         webhook: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/qvapay-webhook`,
       });
 

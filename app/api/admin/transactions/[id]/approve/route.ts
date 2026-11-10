@@ -1,23 +1,21 @@
 // app/api/admin/transactions/[id]/approve/route.ts
-import { NextResponse } from "next/server"; // 👈 Faltaba esta importación
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { processSuccessfulPayment } from "@/lib/subscription-logic"; // 👈 Faltaba esta
+import { processSuccessfulPayment } from "@/lib/subscription-logic";
 import { Plan } from "@/src/generated/prisma/client";
 
 export async function POST(
   req: Request, 
-  { params }: { params: Promise<{ id: string }> } // 👈 En Next.js 15/16 params es una promesa
+  { params }: { params: Promise<{ id: string }> } 
 ) {
   try {
-    // 1. Verificar que el usuario sea Administrador
     const session = await auth();
     if (!session?.user || session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    // 2. Obtener el ID de la transacción
-    const { id } = await params; // 👈 Hacemos await a los params
+    const { id } = await params; 
 
     const transaction = await prisma.transaction.findUnique({ 
       where: { id } 
@@ -28,18 +26,16 @@ export async function POST(
     }
 
     if (transaction.status === "COMPLETED") {
-      return NextResponse.json({ message: "Esta transacción ya fue aprobada" }, { status: 400 });
+      return NextResponse.json({ message: "Esta transacción ya fue aprobada" }, { status: 409 });
     }
 
-    // 3. Procesar la aprobación
     await prisma.$transaction(async (tx) => {
-      // Marcar transacción como completada
       await tx.transaction.update({
         where: { id: transaction.id },
         data: { status: "COMPLETED" }
       });
 
-      // 👇 AQUÍ LLAMAMOS A LA MAGIA (Así los pagos manuales también dan referidos)
+      // Esta función suma los días y maneja referidos
       await processSuccessfulPayment(tx, transaction.userId, transaction.plan as Plan);
     });
 

@@ -79,7 +79,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md bg-[#14161d] border border-gray-800 p-8 rounded-3xl shadow-2xl relative z-10">
+    <div className="w-full max-w-md bg-set-surface border border-gray-800 p-8 rounded-3xl shadow-2xl relative z-10">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-black italic tracking-tighter text-white">
           SETGORIA
@@ -100,7 +100,7 @@ function LoginForm() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 bg-[#090a0e] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-set-bg border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
                 placeholder="Tu nombre"
               />
             </div>
@@ -116,7 +116,7 @@ function LoginForm() {
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full pl-10 pr-4 py-3 bg-[#090a0e] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-set-bg border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
               placeholder="tu@correo.com"
             />
           </div>
@@ -132,7 +132,7 @@ function LoginForm() {
               minLength={6}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full pl-10 pr-4 py-3 bg-[#090a0e] border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-set-bg border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
               placeholder="••••••••"
             />
           </div>
@@ -174,8 +174,8 @@ function LoginForm() {
 // 👇 2. Exportamos la página envolviendo el formulario en Suspense
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#090a0e] p-4 relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-orange-500/20 blur-[120px] rounded-full pointer-events-none"></div>
+    <div className="min-h-screen flex items-center justify-center bg-set-bg p-4 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-100 bg-orange-500/20 blur-[120px] rounded-full pointer-events-none"></div>
       
       <Suspense fallback={
         <div className="text-white flex flex-col items-center">

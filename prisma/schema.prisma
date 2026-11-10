@@ -17,7 +17,6 @@ enum Role {
 enum Sport {
   FUTBOL
   TENIS
-  BASQUETBOL
 }
 
 enum Plan {
@@ -52,7 +51,6 @@ enum Currency {
   USDT
 }
 
-// 👈 NUEVO ENUM PARA EL ESTADO DEL PARTIDO
 enum MatchStatus {
   NS    // Not Started (Por comenzar)
   LIVE  // En Vivo
@@ -91,7 +89,6 @@ model Match {
 
   predictions Prediction[]
 
-  // 👈 Índices para búsquedas ultrarrápidas (Fase 2)
   @@index([matchDate])
   @@index([status])
 }
@@ -116,9 +113,11 @@ model User {
   birthDate     DateTime?
   role          Role           @default(USER)
   createdAt     DateTime       @default(now())
+  
   twoFactorCode      String?
   twoFactorExpiresAt DateTime?
   hasVerifiedOtp     Boolean  @default(false)
+  
   adminLogs AdminLog[] @relation("AdminLogs")
   subscriptions Subscription[]
   transactions  Transaction[]
@@ -127,21 +126,27 @@ model User {
   notifications Notification[]
   comments      Comment[]
   pushSubscriptions PushSubscription[]
+  stories       Story[] @relation("StoryAuthor")
+
   referralCode String?  @unique
   referredById String?
   referredBy   User?    @relation("UserReferrals", fields: [referredById], references: [id])
   referrals    User[]   @relation("UserReferrals")
+
   phone         String?
   documentId    String?
   idCardUrl     String?
   kycStatus     KycStatus @default(NOT_SUBMITTED)
+  
+  strikes   Int     @default(0)
+  isBanned  Boolean @default(false)
 }
 
 model AdminLog {
   id        String   @id @default(cuid())
   adminId   String
   admin     User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
-  action    String   // APPROVE_PAYMENT, DELETE_MATCH, CHANGE_ROLE, etc.
+  action    String
   targetId  String?
   metadata  Json?
   createdAt DateTime @default(now())
@@ -246,7 +251,7 @@ model TelegramUser {
   id        String   @id @default(cuid())
   chatId    String   @unique
   username  String?
-  userId    String?  // Vinculado al usuario de la web (opcional)
+  userId    String?
   createdAt DateTime @default(now())
 }
 
@@ -257,4 +262,7 @@ model Story {
   videoUrl  String?
   createdAt DateTime @default(now())
   expiresAt DateTime?
+  description String?
+  authorId  String
+  author    User     @relation("StoryAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 }

@@ -1,56 +1,70 @@
 // app/api/payments/qvapay-webhook/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { Prisma, Plan } from "@/src/generated/prisma/client";
-import { processSuccessfulPayment } from "@/lib/subscription-logic";
 
-export async function POST(req: Request) {
+const APP_SECRET = process.env.QVAPAY_APP_SECRET!;
+
+function verifySignature(rawBody: string, signatureHeader: string | null): boolean {
+  if (!signatureHeader?.startsWith("sha256=")) return false;
+  
+  const providedSignature = signatureHeader.slice("sha256=".length);
+  const expectedSignature = crypto
+    .createHmac("sha256", APP_SECRET)
+    .update(rawBody)
+    .digest("hex");
+    
+  const a = Buffer.from(providedSignature, "hex");
+  const b = Buffer.from(expectedSignature, "hex");
+  
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     const signature = req.headers.get("x-qvapay-signature");
-    const secret = process.env.QVAPAY_APP_SECRET;
 
-    if (!signature || !secret) return NextResponse.json({ message: "Firma faltante" }, { status: 401 });
-
-    const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-    const provided = signature.replace("sha256=", "");
-
-    if (provided.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
-      return NextResponse.json({ message: "Firma inválida" }, { status: 401 });
+    // 1. Seguridad
+    if (!verifySignature(rawBody, signature)) {
+      console.warn("Intento de webhook con firma inválida.");
+      return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
     }
 
-    const payload = JSON.parse(rawBody) as { status?: string; remote_id?: string; transaction_uuid?: string; };
-    const { status, remote_id, transaction_uuid } = payload;
+    const payload = JSON.parse(rawBody);
+    const { transaction_uuid, status, remote_id } = payload;
 
-    if (status !== "paid" && status !== "COMPLETED") return NextResponse.json({ received: true });
-
-    const orConditions: Prisma.TransactionWhereInput[] = [];
-    if (remote_id) orConditions.push({ id: remote_id }, { reference: remote_id });
-    if (transaction_uuid) orConditions.push({ reference: transaction_uuid });
-
-    if (orConditions.length === 0) return NextResponse.json({ message: "Payload inválido" }, { status: 400 });
-
-    const transaction = await prisma.transaction.findFirst({ where: { OR: orConditions } });
-    if (!transaction) return NextResponse.json({ received: true });
-
-    const result = await prisma.$transaction(async (tx) => {
-      const updated = await tx.transaction.updateMany({
-        where: { id: transaction.id, status: { not: "COMPLETED" } },
-        data: { status: "COMPLETED" },
-      });
-
-      if (updated.count === 0) return { processed: false };
-
-      // 👇 LLAMAMOS A LA FUNCIÓN MÁGICA
-      await processSuccessfulPayment(tx, transaction.userId, transaction.plan as Plan);
-
-      return { processed: true };
+    // 2. Buscar la transacción por el ID que le enviamos a QvaPay
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: remote_id },
     });
 
-    return NextResponse.json({ received: true, processed: result.processed }, { status: 200 });
+    if (!transaction) {
+      console.warn(`Transacción no encontrada para remote_id: ${remote_id}`);
+      return NextResponse.json({ received: true }); // Retornamos 200 para que QvaPay no reintente
+    }
+
+    // 3. Si ya fue aprobada por el admin, ignorar
+    if (transaction.status === "COMPLETED") {
+      return NextResponse.json({ received: true, message: "Ya aprobada" });
+    }
+
+    // 4. Si el pago fue exitoso, pasarlo a revisión manual
+    if (status === "paid") {
+      await prisma.transaction.update({
+        where: { id: transaction.id },
+        data: { 
+          status: "PENDING_REVIEW", // 👈 CAMBIO CLAVE: Ahora queda en revisión
+          reference: transaction_uuid,
+          metadata: payload, 
+        },
+      });
+    }
+
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Error crítico en webhook QvaPay:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    console.error("Error en webhook QvaPay:", error);
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }

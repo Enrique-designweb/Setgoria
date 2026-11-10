@@ -2,8 +2,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Users, ArrowLeft, Crown, Shield, Wallet } from "lucide-react";
+import { Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import AdminUserItem from "./AdminUserItem"; // 👈 Importamos el nuevo componente
 
 export default async function AdminUsersPage({
   searchParams,
@@ -51,7 +52,6 @@ export default async function AdminUsersPage({
         </h1>
       </div>
 
-      {/* Buscador (Opcional si lo quieres mantener, si no, se puede quitar) */}
       <form method="GET" className="mb-6">
         <div className="relative">
           <input
@@ -72,51 +72,19 @@ export default async function AdminUsersPage({
           const hasSub = u.subscriptions.length > 0;
           const lastTx = u.transactions[0];
           
-          return (
-            // 👈 max-w-full y overflow-hidden para evitar desbordes
-            <div key={u.id} className="bg-[#1A1D24] border border-gray-800 rounded-xl p-4 flex flex-col gap-3 w-full max-w-full overflow-hidden">
-              
-              {/* Cabecera del Usuario */}
-              <div className="flex justify-between items-start gap-2 w-full">
-                {/* 👈 min-w-0 permite que los textos se corten con "..." en lugar de empujar el diseño */}
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-white text-base truncate">{u.name || "Sin nombre"}</p>
-                  <p className="text-xs text-gray-400 truncate">{u.email}</p>
-                </div>
-                <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded inline-flex items-center gap-1 ${
-                  u.role === "ADMIN" ? "bg-orange-500/20 text-orange-500" : "bg-gray-800 text-gray-400"
-                }`}>
-                  {u.role === "ADMIN" && <Shield className="w-3 h-3" />} {u.role}
-                </span>
-              </div>
+          // Formateamos el objeto para que coincida con lo que espera el Client Component
+          const formattedUser = {
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            strikes: u.strikes,
+            isBanned: u.isBanned,
+            hasSub,
+            lastTx: lastTx ? { amount: Number(lastTx.amount), method: lastTx.method } : null
+          };
 
-              {/* Info Adicional */}
-              <div className="grid grid-cols-2 gap-2 mt-1 w-full">
-                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 min-w-0">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Suscripción</p>
-                  {hasSub ? (
-                    <span className="text-green-500 font-bold text-xs flex items-center gap-1 truncate">
-                      <Crown className="w-3.5 h-3.5 shrink-0" /> Premium
-                    </span>
-                  ) : (
-                    <span className="text-gray-400 text-xs truncate">Usuario Gratis</span>
-                  )}
-                </div>
-                
-                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 min-w-0">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Último Pago</p>
-                  {lastTx ? (
-                    <span className="text-white font-semibold text-xs flex items-center gap-1 truncate">
-                      <Wallet className="w-3.5 h-3.5 text-orange-500 shrink-0" /> 
-                      <span className="truncate">${Number(lastTx.amount)} ({lastTx.method})</span>
-                    </span>
-                  ) : (
-                    <span className="text-gray-500 text-xs truncate">Sin pagos</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
+          return <AdminUserItem key={u.id} user={formattedUser} />;
         })}
       </div>
     </div>

@@ -17,7 +17,7 @@ export default async function Home() {
   const now = new Date();
   const dbStories = await prisma.story.findMany({
     where: {
-      expiresAt: { gt: now } // Solo si la fecha de expiración es mayor al momento actual
+      expiresAt: { gt: now } 
     },
     orderBy: { createdAt: 'desc' },
     take: 10 
@@ -26,6 +26,7 @@ export default async function Home() {
   const stories: StoryData[] = dbStories.map(s => ({
     id: s.id,
     title: s.title,
+    description: s.description, // 👈 AÑADIDO AQUÍ
     imageUrl: s.imageUrl,
     videoUrl: s.videoUrl
   }));

@@ -17,16 +17,16 @@ export default function AdminPaymentItem({ transaction }: { transaction: Transac
   const [loading, setLoading] = useState(false);
 
   const handleApprove = async () => {
-    const toastId = toast.loading("Aprobando...");
+    const toastId = toast.loading("Aprobando pago...");
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/payments/approve", {
+      // 👈 Apunta a la ruta correcta con el ID de la transacción
+      const res = await fetch(`/api/admin/transactions/${transaction.id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId: transaction.id }),
       });
 
-      if (res.status === 409) {
+      if (res.status === 409 || res.status === 400) {
         toast.warning("Este pago ya fue entregado.", { id: toastId });
         router.refresh();
         return;
@@ -36,7 +36,6 @@ export default function AdminPaymentItem({ transaction }: { transaction: Transac
       toast.success("Suscripción entregada", { id: toastId });
       router.refresh();
     } catch (error: unknown) {
-      // 👈 SOLUCIÓN: Imprimimos el error para usarlo y verlo en los logs de Vercel
       console.error("Error al aprobar transacción:", error);
       toast.error("Error al procesar", { id: toastId });
     } finally {
@@ -44,6 +43,7 @@ export default function AdminPaymentItem({ transaction }: { transaction: Transac
     }
   };
 
+  // Aceptamos tanto PENDING como PENDING_REVIEW
   const isPending = transaction.status === "PENDING" || transaction.status === "PENDING_REVIEW";
   const isCompleted = transaction.status === "COMPLETED";
 
