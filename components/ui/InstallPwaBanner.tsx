@@ -39,7 +39,7 @@ export default function InstallPwaBanner() {
   if (!supportsPWA || !isVisible) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-[90] bg-[#1A1D24] border border-orange-500/50 p-3 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-bottom-5">
+    <div className="fixed bottom-20 left-4 right-4 z-90 bg-[#1A1D24] border border-orange-500/50 p-3 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-bottom-5">
       <div className="flex items-center gap-3">
         <div className="bg-orange-500/20 p-2 rounded-xl">
           <Download className="w-5 h-5 text-orange-500" />

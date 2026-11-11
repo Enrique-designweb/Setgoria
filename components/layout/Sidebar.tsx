@@ -3,7 +3,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard, CreditCard, TrendingUp } from "lucide-react";
+// 👇 Añadimos Gift
+import { Home, Zap, Trophy, Users, Crown, BarChart2, Shield, Info, Settings, LayoutDashboard, CreditCard, TrendingUp, Gift } from "lucide-react";
 import { clsx } from "clsx";
 
 interface SidebarProps {
@@ -14,19 +15,20 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
   const pathname = usePathname();
 
   const userMenuItems = [
-    { name: "Inicio", href: "/inicio", icon: Home }, // 👈 Cambiado a /inicio
+    { name: "Inicio", href: "/inicio", icon: Home },
     { name: "Fútbol", href: "/futbol", icon: Zap },
     { name: "Tenis", href: "/tenis", icon: Trophy },
     { name: "Estadísticas", href: "/estadisticas", icon: TrendingUp },
     { name: "Comunidad", href: "/comunidad", icon: Users },
     { name: "Pronósticos", href: "/pronosticos", icon: BarChart2 },
+    { name: "Referidos", href: "/referidos", icon: Gift }, // 👈 AÑADIDO AQUÍ
     { name: "Mi suscripción", href: "/suscripcion", icon: Crown },
     { name: "Historial", href: "/historial", icon: Shield },
     { name: "Términos", href: "/terminos", icon: Info },
   ];
 
   const adminMenuItems = [
-    { name: "Inicio", href: "/inicio", icon: Home }, // 👈 Cambiado a /inicio
+    { name: "Inicio", href: "/inicio", icon: Home },
     { name: "Panel de Admin", href: "/admin", icon: LayoutDashboard },
     { name: "Pagos Pendientes", href: "/admin/pagos", icon: CreditCard },
     { name: "Gestión Usuarios", href: "/admin/usuarios", icon: Users },

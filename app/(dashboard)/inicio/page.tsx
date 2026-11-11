@@ -12,36 +12,38 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const session = await auth();
-
-  // 👇 1. Obtener Historias VÁLIDAS (Creadas hace menos de 24h)
   const now = new Date();
-  const dbStories = await prisma.story.findMany({
-    where: {
-      expiresAt: { gt: now } 
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 10 
-  });
+
+  // 👇 1. OPTIMIZACIÓN: Ejecutamos todas las consultas a la BD en paralelo
+  const [dbStories, matches, liveMatchesRaw, activeSub] = await Promise.all([
+    prisma.story.findMany({
+      where: { expiresAt: { gt: now } },
+      orderBy: { createdAt: 'desc' },
+      take: 10 
+    }),
+    prisma.match.findMany({
+      include: { predictions: true },
+      orderBy: { matchDate: 'asc' },
+      take: 3 
+    }),
+    prisma.match.findMany({
+      where: { status: "LIVE" },
+      include: { predictions: true },
+    }),
+    session?.user?.id 
+      ? prisma.subscription.findFirst({
+          where: { userId: session.user.id, status: "ACTIVE", expiresAt: { gt: now } }
+        })
+      : Promise.resolve(null)
+  ]);
 
   const stories: StoryData[] = dbStories.map(s => ({
     id: s.id,
     title: s.title,
-    description: s.description, // 👈 AÑADIDO AQUÍ
+    description: s.description,
     imageUrl: s.imageUrl,
     videoUrl: s.videoUrl
   }));
-
-  // 👇 2. Obtener Partidos Destacados
-  const matches = await prisma.match.findMany({
-    include: { predictions: true },
-    orderBy: { matchDate: 'asc' },
-    take: 3 
-  });
-
-  const liveMatchesRaw = await prisma.match.findMany({
-    where: { status: "LIVE" },
-    include: { predictions: true },
-  });
 
   const liveMatches: OfflineMatch[] = liveMatchesRaw.map((m) => ({
     id: m.id, league: m.league, homeTeam: m.homeTeam, awayTeam: m.awayTeam,
@@ -51,22 +53,12 @@ export default async function Home() {
     predictions: m.predictions,
   }));
 
-  // 👇 3. Verificar Suscripción
-  let hasActiveSubscription = false;
-  if (session?.user?.id) {
-    const activeSub = await prisma.subscription.findFirst({
-      where: { userId: session.user.id, status: "ACTIVE", expiresAt: { gt: new Date() } }
-    });
-    if (activeSub) hasActiveSubscription = true;
-  }
+  const hasActiveSubscription = !!activeSub;
 
   return (
     <main className="p-4 md:p-10 min-h-screen bg-set-bg text-white w-full overflow-x-hidden">
       <div className="max-w-4xl mx-auto w-full">
-        
-        {/* 👇 Renderizamos las historias dinámicas */}
         <StoriesBar stories={stories} />
-        
         <LiveMatches matches={liveMatches} />
         
         <div className="flex items-center justify-between mt-8 mb-4">

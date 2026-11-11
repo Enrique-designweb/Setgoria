@@ -26,7 +26,7 @@ export default async function DashboardLayout({
     select: { createdAt: true, role: true },
   });
 
-  const isAdmin = user?.role === "ADMIN"; // 👈 Calculamos si es admin
+  const isAdmin = user?.role === "ADMIN"; 
 
   const activeSub = await prisma.subscription.findFirst({
     where: {
@@ -45,27 +45,38 @@ export default async function DashboardLayout({
   const shouldBlock = !isAdmin && isTrialExpired && !hasActiveSubscription;
 
   return (
+    // 👇 Aseguramos que ocupe toda la pantalla y no haya desbordes
     <div className="flex min-h-screen bg-set-bg text-white w-full overflow-hidden">
+      
+      {/* Sidebar solo para PC (oculto en móvil) */}
       <div className="hidden md:flex w-64 shrink-0 border-r border-gray-800">
         <Sidebar isAdmin={isAdmin} />
       </div>
       
+      {/* Contenedor principal */}
       <div className="flex-1 flex flex-col min-h-screen w-full min-w-0">
         <TopBar />
         
+        {/* 
+            👇 AÑADIDO pb-24 (padding-bottom) para que la BottomNav 
+            no tape el final del contenido en móviles. 
+        */}
         <main className="flex-1 w-full min-w-0 pb-24 md:pb-0 flex flex-col overflow-x-hidden">
           <div className="flex-1 w-full min-w-0">
             <SubscriptionGate isExpired={shouldBlock}>
               {children}
             </SubscriptionGate>
           </div>
+          
+          {/* Footer solo para PC */}
           <div className="hidden md:block">
             <Footer />
           </div>
         </main>
         
-        {/* 👇 Le pasamos el isAdmin a la barra inferior */}
+        {/* BottomNav solo para móvil (oculto en PC) */}
         <BottomNav isAdmin={isAdmin} />
+        
         <InstallPwaBanner />
       </div>
     </div>

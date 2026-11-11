@@ -5,8 +5,7 @@ import { Providers } from "@/app/providers";
 import PWARegister from "@/components/PWARegister";
 
 export const metadata: Metadata = {
-  // 👈 AÑADIMOS ESTA LÍNEA
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://setgoria.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://setgoria.com"),
   
   title: {
     default: "SETGORIA | Pronósticos Deportivos",
@@ -24,16 +23,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SETGORIA | Pronósticos Deportivos",
     description: "Pronósticos con probabilidad para fútbol y tenis.",
-    url: "https://setgoria.vercel.app",
+    url: "https://setgoria.com",
     siteName: "SETGORIA",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "SETGORIA | Pronósticos Deportivos",
     description: "Pronósticos con probabilidad para fútbol y tenis.",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
   },
   icons: {
     icon: "/favicon.ico",

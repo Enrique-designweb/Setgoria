@@ -8,6 +8,7 @@ import { paymentLimiter } from "@/lib/ratelimit";
 import { createPaymentSchema } from "@/lib/validations";
 import { Plan, PaymentMethod, Currency } from "@/src/generated/prisma/client";
 import { sendVerificationEmail } from "@/lib/email"; 
+import { handleApiError } from "@/lib/error-handler"; // 👈 Importación del manejador
 
 const qvapay = new QvaPaySDK({
   appId: process.env.QVAPAY_APP_ID!,
@@ -31,15 +32,21 @@ async function sendTelegramOtp(chatId: string, code: string) {
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
 
     const identifier = `payment:${session.user.id}`;
     const { success } = await paymentLimiter.limit(identifier);
-    if (!success) return NextResponse.json({ message: "Límite de intentos alcanzado." }, { status: 429 });
+    if (!success) {
+      return NextResponse.json({ message: "Límite de intentos alcanzado. Espera 24 horas." }, { status: 429 });
+    }
 
     const body = await req.json();
     const validation = createPaymentSchema.safeParse(body);
-    if (!validation.success) return NextResponse.json({ message: validation.error.issues[0]?.message }, { status: 400 });
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error.issues[0]?.message }, { status: 400 });
+    }
 
     const { plan, method } = validation.data;
 
@@ -49,12 +56,20 @@ export async function POST(req: Request) {
     };
 
     const selectedPlan = planConfig[plan];
+    if (!selectedPlan) {
+      return NextResponse.json({ message: "Plan inválido" }, { status: 400 });
+    }
+
     let currency = selectedPlan.currency;
     if (method === "TRANSFERMOVIL") currency = Currency.CUP;
 
     let plainCode = null;
     let hashedCode = null;
     let expiresAt = null;
+
+    // Obtenemos IP y Dispositivo para el correo de seguridad
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "Desconocida";
+    const userAgent = req.headers.get("user-agent") || "Navegador Web";
 
     // 👇 SI ES MENSUAL (PREMIUM) O CUALQUIER PAGO MANUAL, GENERAMOS OTP
     if (method === "TRANSFERMOVIL" || method === "CARD" || method === "USDT") {
@@ -65,10 +80,10 @@ export async function POST(req: Request) {
 
       // 1. Enviar por Email (Brevo)
       if (session.user.email) {
-        await sendVerificationEmail(session.user.email, plainCode);
+        await sendVerificationEmail(session.user.email, plainCode, ip, userAgent);
       }
 
-      // 2. Si es PREMIUM (MONTHLY) o tiene Telegram vinculado, enviar por Telegram
+      // 2. Si tiene Telegram vinculado, enviar por ahí también
       const tgUser = await prisma.telegramUser.findFirst({
         where: { userId: session.user.id }
       });
@@ -78,6 +93,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // Crear la transacción en BD
     const transaction = await prisma.transaction.create({
       data: {
         userId: session.user.id,
@@ -91,6 +107,7 @@ export async function POST(req: Request) {
       },
     });
 
+    // Flujo QvaPay (Pasarela externa)
     if (method === "QVAPAY") {
       const invoice = await qvapay.app.createInvoice({
         amount: selectedPlan.amount,
@@ -105,13 +122,16 @@ export async function POST(req: Request) {
       });
 
       const paymentUrl = invoice.url || (invoice as { payment_url?: string }).payment_url;
+      if (!paymentUrl) throw new Error("QvaPay no devolvió una URL de pago válida.");
+
       return NextResponse.json({ redirectUrl: paymentUrl });
     }
 
+    // Flujo Manual (Devuelve el código generado)
     return NextResponse.json({ transactionId: transaction.id, paymentCode: plainCode });
 
   } catch (error: unknown) {
-    console.error("Error creando transacción:", error);
-    return NextResponse.json({ message: "Error del servidor" }, { status: 500 });
+    // 👇 Usamos el manejador global de errores
+    return handleApiError(error, "No se pudo crear la transacción");
   }
 }
