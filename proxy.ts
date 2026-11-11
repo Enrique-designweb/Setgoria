@@ -1,12 +1,13 @@
-// proxy.ts
+// proxy.ts (o middleware.ts en algunas versiones de Next)
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 
 export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth
   const { pathname } = req.nextUrl
+  const isAdmin = req.auth?.user?.role === "ADMIN"
 
-  // 👈 Rutas que cualquiera puede ver SIN estar logueado
+  // 👈 Rutas públicas
   const publicRoutes = [
     '/', 
     '/login', 
@@ -14,10 +15,9 @@ export const proxy = auth((req) => {
     '/reset-password', 
     '/offline', 
     '/terminos', 
-    '/estadisticas' // Si quieres que las estadísticas sean públicas, déjala aquí
+    '/estadisticas' 
   ]
   
-  // Verificamos si la ruta actual es pública
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || pathname.startsWith(`${route}/`)
   )
@@ -32,10 +32,14 @@ export const proxy = auth((req) => {
     return NextResponse.redirect(new URL('/inicio', req.nextUrl))
   }
 
+  // 3. 👇 PROTECCIÓN DEL ADMIN: Si intenta ir a /admin y no es admin -> /inicio
+  if (isLoggedIn && pathname.startsWith('/admin') && !isAdmin) {
+    return NextResponse.redirect(new URL('/inicio', req.nextUrl))
+  }
+
   return NextResponse.next()
 })
 
 export const config = {
-  // Excluimos APIs, archivos estáticos, la PWA y el favicon del middleware
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js).*)'],
 }

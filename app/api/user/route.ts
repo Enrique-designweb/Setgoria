@@ -14,10 +14,36 @@ export async function GET() {
       select: {
         id: true, name: true, email: true, image: true, birthDate: true,
         phone: true, documentId: true, idCardUrl: true, kycStatus: true, role: true, referralCode: true,
+        subscriptions: {
+          where: { status: "ACTIVE", expiresAt: { gt: new Date() } },
+          orderBy: { expiresAt: "desc" },
+          take: 1,
+          select: { plan: true }
+        }
       },
     });
 
-    return NextResponse.json(user);
+    if (!user) return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
+
+    const activePlan = user.subscriptions.length > 0 ? user.subscriptions[0].plan : null;
+    
+    // 👇 Construimos el objeto manualmente para evitar el error de variables no usadas
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      birthDate: user.birthDate,
+      phone: user.phone,
+      documentId: user.documentId,
+      idCardUrl: user.idCardUrl,
+      kycStatus: user.kycStatus,
+      role: user.role,
+      referralCode: user.referralCode,
+      activePlan
+    };
+
+    return NextResponse.json(userData);
   } catch (error: unknown) {
     console.error("Error obteniendo usuario:", error);
     return NextResponse.json({ message: "Error del servidor" }, { status: 500 });
@@ -35,7 +61,6 @@ export async function PUT(req: Request) {
       return NextResponse.json({ message: "La fecha de nacimiento es obligatoria" }, { status: 400 });
     }
 
-    // 👇 VALIDACIÓN INTELIGENTE: Si el CI tiene 11 dígitos, asumimos que es cubano
     if (documentId && documentId.replace(/\D/g, "").length === 11) {
       const validation = validateCubanCI(documentId, birthDate);
       if (!validation.isValid) {
@@ -56,7 +81,7 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json(updatedUser);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error al actualizar perfil:", error);
     return NextResponse.json({ message: "Error del servidor" }, { status: 500 });
   }

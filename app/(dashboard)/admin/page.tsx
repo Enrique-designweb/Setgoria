@@ -3,30 +3,64 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Shield, Plus, CreditCard, Users, Settings } from "lucide-react";
+import { Shield, Plus, CreditCard, Users, Settings, Image as ImageIcon, ArrowRight } from "lucide-react";
 import AdminMatchForm from "./AdminMatchForm";
 import AdminMatchItem from "./AdminMatchItem";
-import { Match, Prediction } from "@/src/generated/prisma/client"; // 👈 1. Importamos tipos
+import { Match, Prediction } from "@/src/generated/prisma/client";
 
-// 👈 2. Definimos el tipo exacto
 type MatchWithPredictions = Match & { predictions: Prediction[] };
 
 export default async function AdminPage() {
   const session = await auth();
   
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
+  // 👈 Si no es admin, lo mandamos a /inicio, NO a / (que podría causar bucle)
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/inicio");
 
-  // 👈 3. Forzamos a TypeScript a saber que esto es un arreglo de MatchWithPredictions
   const matches = (await prisma.match.findMany({
     include: { predictions: true },
     orderBy: { matchDate: 'desc' }
   })) as MatchWithPredictions[];
 
+  const adminCards = [
+    {
+      title: "Gestionar Pagos",
+      desc: "Aprobar QvaPay, Transfermóvil y USDT",
+      href: "/admin/pagos",
+      icon: CreditCard,
+      color: "text-green-500",
+      bg: "bg-green-500/10"
+    },
+    {
+      title: "Ver Usuarios",
+      desc: "Sanciones, tarjetas y cuentas",
+      href: "/admin/usuarios",
+      icon: Users,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
+    },
+    {
+      title: "Historias",
+      desc: "Subir imágenes y videos a la Home",
+      href: "/admin/historias",
+      icon: ImageIcon,
+      color: "text-purple-500",
+      bg: "bg-purple-500/10"
+    },
+    {
+      title: "Ajustes", // 👈 Renombrado
+      desc: "Variables, sistema y mantenimiento",
+      href: "/admin/ajustes", 
+      icon: Settings,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10"
+    }
+  ];
+
   return (
     <div className="p-4 md:p-10 max-w-5xl mx-auto">
       
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-8">
         <div className="bg-orange-500/20 p-2 rounded-lg">
           <Shield className="text-orange-500 w-6 h-6" />
         </div>
@@ -35,30 +69,28 @@ export default async function AdminPage() {
         </h1>
       </div>
 
-      {/* 👈 Accesos Rápidos para Móvil */}
-      <div className="grid grid-cols-2 md:hidden gap-3 mb-8">
-        <Link href="/admin/pagos" className="bg-set-surface border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
-          <CreditCard className="w-6 h-6 text-orange-500" />
-          <span className="text-xs font-bold">Gestionar Pagos</span>
-        </Link>
-        <Link href="/admin/usuarios" className="bg-set-surface border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2">
-          <Users className="w-6 h-6 text-orange-500" />
-          <span className="text-xs font-bold">Ver Usuarios</span>
-        </Link>
-        <Link href="/configuracion" className="bg-set-surface border border-gray-800 p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 col-span-2">
-          <Settings className="w-6 h-6 text-orange-500" />
-          <span className="text-xs font-bold">Configuración Global</span>
-        </Link>
-      </div>
-
-      {/* Botones para PC (Desktop) */}
-      <div className="hidden md:flex items-center gap-2 mb-8">
-        <Link href="/admin/usuarios" className="bg-set-surface hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-          <Users className="w-4 h-4 text-orange-500" /> Usuarios
-        </Link>
-        <Link href="/admin/pagos" className="bg-set-surface hover:bg-gray-800 border border-gray-700 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-          <CreditCard className="w-4 h-4 text-orange-500" /> Gestionar Pagos
-        </Link>
+      {/* 👇 NUEVO GRID DE ADMIN 👇 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        {adminCards.map((card) => (
+          <Link 
+            key={card.title} 
+            href={card.href}
+            className="bg-[#1A1D24] border border-gray-800 hover:border-orange-500/50 p-4 rounded-2xl flex flex-col transition-all group hover:-translate-y-1"
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${card.bg} ${card.color}`}>
+              <card.icon className="w-5 h-5" />
+            </div>
+            <h2 className="text-sm font-bold text-white mb-1 group-hover:text-orange-500 transition-colors">
+              {card.title}
+            </h2>
+            <p className="text-[10px] text-gray-400 flex-1 leading-tight mb-3">
+              {card.desc}
+            </p>
+            <div className="flex items-center text-[10px] font-bold text-gray-500 group-hover:text-white transition-colors">
+              Acceder <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        ))}
       </div>
 
       {/* Layout Responsive (Columna en móvil, fila en PC) */}

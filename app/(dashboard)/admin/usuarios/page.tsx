@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import AdminUserItem from "./AdminUserItem"; // 👈 Importamos el nuevo componente
+import AdminUserItem from "./AdminUserItem";
 
 export default async function AdminUsersPage({
   searchParams,
@@ -12,7 +12,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") redirect("/");
+  if (session?.user?.role !== "ADMIN") redirect("/inicio"); // 👈 Redirección corregida
 
   const { q = "" } = await searchParams;
   const search = q.trim();
@@ -72,7 +72,7 @@ export default async function AdminUsersPage({
           const hasSub = u.subscriptions.length > 0;
           const lastTx = u.transactions[0];
           
-          // Formateamos el objeto para que coincida con lo que espera el Client Component
+          // 👇 Añadidos los campos que faltaban
           const formattedUser = {
             id: u.id,
             name: u.name,
@@ -81,7 +81,9 @@ export default async function AdminUsersPage({
             strikes: u.strikes,
             isBanned: u.isBanned,
             hasSub,
-            lastTx: lastTx ? { amount: Number(lastTx.amount), method: lastTx.method } : null
+            lastTx: lastTx ? { amount: Number(lastTx.amount), method: lastTx.method } : null,
+            kycStatus: u.kycStatus, // 👈 Añadido
+            idCardUrl: u.idCardUrl  // 👈 Añadido
           };
 
           return <AdminUserItem key={u.id} user={formattedUser} />;

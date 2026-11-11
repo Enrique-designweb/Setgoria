@@ -8,7 +8,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { 
   User, Calendar, Camera, Loader2, History, FileText, Settings, LogOut, 
-  ChevronRight, Gift, Phone, CreditCard, ShieldCheck, LayoutDashboard
+  ChevronRight, Gift, Phone, CreditCard, ShieldCheck, LayoutDashboard,
+  Trophy, Send, Copy, CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
 import { APP_VERSION } from "@/lib/constants";
@@ -22,7 +23,11 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedTg, setCopiedTg] = useState(false);
   const [kycStatus, setKycStatus] = useState("NOT_SUBMITTED");
+  
+  const [vipPlan, setVipPlan] = useState<string | null>(null);
+  const [userIdShort, setUserIdShort] = useState("");
 
   const [formData, setFormData] = useState({ 
     name: "", birthDate: "", phone: "", documentId: "", email: "", role: "", image: "" 
@@ -45,6 +50,8 @@ export default function ProfilePage() {
           });
           setReferralCode(data.referralCode || "");
           setKycStatus(data.kycStatus || "NOT_SUBMITTED");
+          setVipPlan(data.activePlan || null); 
+          if (data.id) setUserIdShort(data.id.slice(0, 6).toUpperCase());
         }
       } catch (error: unknown) {
         console.error("Error cargando perfil", error);
@@ -107,6 +114,13 @@ export default function ProfilePage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyTelegramCode = () => {
+    navigator.clipboard.writeText(`/vincular ${userIdShort}`);
+    setCopiedTg(true);
+    toast.success("Código copiado. Pégalo en el Bot de Telegram.");
+    setTimeout(() => setCopiedTg(false), 2000);
+  };
+
   if (loading) return <div className="p-10 text-center text-gray-400">Cargando...</div>;
 
   return (
@@ -128,7 +142,22 @@ export default function ProfilePage() {
             <input type="file" accept="image/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           </label>
         </div>
-        <h1 className="text-2xl font-bold">{formData.name || "Usuario"}</h1>
+        
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">{formData.name || "Usuario"}</h1>
+          {vipPlan === "MONTHLY" && (
+            <div className="flex items-center gap-1 bg-yellow-500/10 px-2 py-0.5 rounded-lg border border-yellow-500/30">
+              <Trophy className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" />
+              <span className="text-[10px] font-black text-yellow-500">VIP</span>
+            </div>
+          )}
+          {vipPlan === "WEEKLY" && (
+            <div className="bg-orange-500/10 p-1 rounded-lg border border-orange-500/30">
+               <Trophy className="w-3 h-3 text-orange-500" />
+            </div>
+          )}
+        </div>
+
         <p className="text-sm text-gray-400">{formData.email}</p>
         
         <div className="mt-2 flex items-center gap-2">
@@ -160,6 +189,41 @@ export default function ProfilePage() {
             Ir al Panel de Administración
           </Link>
         )}
+
+        {/* VINCULAR TELEGRAM + BOTÓN DE SOPORTE */}
+        <div className="bg-[#1A1D24] rounded-2xl overflow-hidden border border-blue-500/30">
+          <div className="p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-500/10 p-2 rounded-lg"><Send className="w-5 h-5 text-blue-500" /></div>
+              <div>
+                <p className="text-sm font-bold text-white">Vincular con Telegram</p>
+                <p className="text-[10px] text-gray-400">Recibe códigos OTP y soporte directo.</p>
+              </div>
+            </div>
+            
+            {userIdShort ? (
+              <div className="bg-black/30 border border-gray-800 p-3 rounded-xl flex items-center justify-between mt-1">
+                <code className="text-blue-400 font-mono text-sm">/vincular {userIdShort}</code>
+                <button onClick={copyTelegramCode} className="text-gray-400 hover:text-white transition-colors">
+                  {copiedTg ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">Cargando código...</p>
+            )}
+            <p className="text-[10px] text-gray-500">Copia este código y envíalo en nuestro Bot oficial <a href="https://t.me/SetgoriaSportBot" target="_blank" className="text-blue-400 hover:underline">@SetgoriaSportBot</a></p>
+            
+            {/* 👇 BOTÓN DE SOPORTE DIRECTO 👇 */}
+            <a 
+              href="https://t.me/SetgoriaSportBot?start=support" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors active:scale-95"
+            >
+              <Send className="w-4 h-4" /> Contactar Soporte por Telegram
+            </a>
+          </div>
+        </div>
 
         {/* Referidos */}
         {referralCode && (

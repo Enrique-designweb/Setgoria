@@ -1,14 +1,13 @@
 // app/login/page.tsx
 "use client";
 
-import { useState, Suspense } from "react"; // 👈 Importamos Suspense
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, User, Loader2, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowRight, Eye, EyeOff } from "lucide-react"; // 👈 Añadimos Eye y EyeOff
 import { toast } from "sonner";
 
-// 👇 1. Creamos el formulario separado
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -16,6 +15,7 @@ function LoginForm() {
 
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👈 Estado para el ojito
   
   const [formData, setFormData] = useState({
     name: "",
@@ -127,15 +127,32 @@ function LoginForm() {
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"} // 👈 Lógica del ojito
               required
               minLength={6}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full pl-10 pr-4 py-3 bg-set-bg border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+              className="w-full pl-10 pr-12 py-3 bg-set-bg border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
               placeholder="••••••••"
             />
+            {/* 👈 Botón del Ojito */}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
           </div>
+          
+          {/* 👈 Enlace de olvidé contraseña (solo en login) */}
+          {isLogin && (
+            <div className="flex justify-end mt-2">
+              <Link href="/forgot-password" className="text-xs text-orange-500 hover:text-orange-400 font-medium transition-colors">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+          )}
         </div>
 
         <button
@@ -171,7 +188,6 @@ function LoginForm() {
   );
 }
 
-// 👇 2. Exportamos la página envolviendo el formulario en Suspense
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-set-bg p-4 relative overflow-hidden">
